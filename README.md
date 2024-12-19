@@ -64,3 +64,25 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
     * Formater: ***[Black](https://github.com/psf/black)***
     * Debugger: ***[PDB](https://docs.python.org/3/library/pdb.html)***
     * Testowanie: ***[Pytest](https://docs.pytest.org/en/stable/)***
+
+## 6. Architektura rozwiązania
+
+Bloki funkcjonalne serwera
+
+- Blok Interfejsu Połączeń
+    * Akceptuje i zarządza połączeniami serwera z klientem przy pomocy *sockets*
+    * Akceptuje i zarządza połączeniami serwera z serwerem przy pomocy *sockets*
+    * Zarządza komunikacją z gniazdami
+    * Zapewnia wielowątkową obsługę gniazd
+- Blok Uwierzytelniania
+    * Zarządza logowaniem użytkowników
+    * Zapewnia niepowtarzalność nazw użytkowników
+    * Potwierdza i zarządza listami uwierzytelniającymi
+    * Zapewnia bezpieczny dostęp do kanałów chronionych hasłem
+- Blok Menadżera Kanałów
+    * Zarządza listą kanałów
+    * Zarządza właścicielem kanału
+    * Zarządza listą użytkowników połączonych do kanału
+    * Umożliwia właścicielowi usunąć użytkownia z kanału
+    
+- 
