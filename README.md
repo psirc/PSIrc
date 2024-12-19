@@ -21,16 +21,19 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
     - Serwer musi być zabezpieczony przez nieutoryzowanym użyciem
     - Serwer musi obsługiwać wielu użytkowników na raz
     - System musi być intuicyjny i zrozumiały w obsłudze
+    - Serwer musi płynnie kończyć działanie - obsługa `SIGTERM`, `SIGINT`
 
 ## 3. Przypadki użycia
 
 **Komunikacja z grupą znajomych**
+
 *Aktor: Użytkownik*
 1. Użytkownik łączy się do działającego serwera IRC
 2. Użytkownik łączy się z kanałem `#znajomi` podając swój pseudonim
 3. Użytkownik komunikuje się ze znajomymi
 
 **Komunikacja z uwierzytelnieniem**
+
 *Aktor: Użytkownik*
 1. Użytkownik łączy się do działającego serwera IRC
 2. Użytkownik podaje hasło dostępu do serwera
@@ -38,12 +41,14 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 4. Użytkownik komunikuje się ze znajomimi
 
 **Tworzenie serwera IRC**
+
 *Aktor: Administrator*
 1. Administrator konfiguruje parametry uruchomienia serwera
 2. Administrator uruchamia serwer IRC w sieci lokalnej
 3. Administrator ustawia metodę uwierzytelniania na brak
 
 **Łączenie serwerów IRC**
+
 *Aktor: Administrator1, Administrator2*
 1. Administrator1 chce połączyć swój serwer IRC z serwerem znajdującym się na maszynie innego administratora
 2. Administrator1 zgłasza chęć połączenia do serwera
@@ -54,4 +59,8 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 
 - Serwer działać będzie na systemie operacyjnym **Linux**
 - Realizacja serwera w języku `Python`
-    * Menadżer pakietowania i zależności: [Poetry](https://python-poetry.org/)
+    * Menadżer pakietowania i zależności: ***[Poetry](https://python-poetry.org/)***
+    * Linter: ***[Ruff](https://docs.astral.sh/ruff/)***
+    * Formater: ***[Black](https://github.com/psf/black)***
+    * Debugger: ***[PDB](https://docs.python.org/3/library/pdb.html)***
+    * Testowanie: ***[Pytest](https://docs.pytest.org/en/stable/)***
