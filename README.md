@@ -70,8 +70,8 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 Bloki funkcjonalne serwera
 
 - Blok Interfejsu Połączeń
-    * Akceptuje i zarządza połączeniami serwera z klientem przy pomocy *sockets*
-    * Akceptuje i zarządza połączeniami serwera z serwerem przy pomocy *sockets*
+    * Akceptuje i zarządza połączeniami serwera z klientem przy pomocy gniazd
+    * Akceptuje i zarządza połączeniami serwera z serwerem przy pomocy gniazd
     * Zarządza komunikacją z gniazdami
     * Zapewnia wielowątkową obsługę gniazd
 - Blok Uwierzytelniania
@@ -79,10 +79,24 @@ Bloki funkcjonalne serwera
     * Zapewnia niepowtarzalność nazw użytkowników
     * Potwierdza i zarządza listami uwierzytelniającymi
     * Zapewnia bezpieczny dostęp do kanałów chronionych hasłem
+- Blok Menadżera Sesji
+    * Zarządza listą użytkowników połączonych z serwerem
+    * Zarządza asocjacją pomiędzy nazwą użykownia a gniazdem
+    * Zarządza asocjacją pomiędzy nazwą użykownia a innym serwerem
+    * Informuje inne bloki o rozłączeniu klienta
+- Blok Menadżera Serwerów
+    * Zarządza listą bezpośrednio połączonych serwerów IRC
+    * Zarządza listą serwerów IRC dostępnych pośrednio przez bezpośrednio połączone serwery IRC
 - Blok Menadżera Kanałów
     * Zarządza listą kanałów
     * Zarządza właścicielem kanału
+    * Zarządza opcjonalnym hasłem dostępu do kanału
     * Zarządza listą użytkowników połączonych do kanału
     * Umożliwia właścicielowi usunąć użytkownia z kanału
-    
-- 
+    * Potwierdza status użytkownika jako członka kanału
+- Blok Menadżera Przekierowań
+    * Przekierowuje wiadomości pomiędzy klientami, kanałami i serwerami
+    * Wysyła wiadomości prywatne do klientów połączonych do serwera
+    * Wysyła wiadomości do wszystkich klientów znajdujących się na kanale połączonych do serwera
+    * Przekierowuje wiadomości prywatne do odpowiednich połączonych bezpośrednio serwerów
+    * Przekierowuje wiadomości wysłane na kanał do serwerów, do których połączeni są użytkownicy połączeni z danym kanałem
