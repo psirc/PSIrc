@@ -262,3 +262,17 @@ Funkcje:
 - Przesyłanie wiadomości do użytkowników obecnych na danym kanale
 - Obsługa wyjścia z kanału (PART)
 - Obsługa zakończenia sesji klienta (QUIT)
+
+## 11. Harmonogram
+    * 27.12:
+        - Szkielet klienta
+        - Szkielet serwera
+    * 3.01:
+        - Obsługa wiadomości prywatnych pomiędzy klientami
+    * 10.01:
+        - Obsługa wiadomości na kanałach
+    * 17.01:
+        - Obsługa połączeń pomiędzy serwerami
+    * 24.01:
+        - Obsługa wyrzucania klienta z kanału
+        - Upiększenie interfejsu klienta
