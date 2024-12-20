@@ -154,9 +154,9 @@ Bloki funkcjonalne serwera
 
 ## 7. Listy komunikatów
 
-- Dołączanie do serwera chronionego hasłem
+- Dołączanie do serwera
     * Komenda: PASS
-    * parametry: <hasło do serwera>
+    * parametry: <opcjonalne hasło do serwera>
     * możliwe odpowiedzi:
         - OK
         - ERR_NEEDMOREPARAMS
@@ -208,6 +208,20 @@ Bloki funkcjonalne serwera
         - OK
         - ERR_NOSUCHNICK
         - ERR_NOSUCHCHANNEL
+- Uzyskanie statusu administratora
+    * Komenda: OPER
+    * parametry: <nazwa administratora> <hasło>
+    * możliwe odpowiedzi:
+        - RPL_YOUREOPER
+        - ERR_NEEDMOREPARAMS
+        - ERR_PASSWDMISMATCH
+- Połączenie serwera IRC z innym serwerem
+    * Komenda: SERVER
+    * parametry: <nazwa serwera>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NEEDMOREPARAMS
+        - ERR_ALREADYREGISTRED
 
 ## 8. Sposób testowania
 - Testy jednostkowe:
