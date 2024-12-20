@@ -70,7 +70,7 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 3. Administrator2 akceptuje prośbę o połączenie
 4. Administrator1 ma teraz dostęp do kanałów obecnych na serwerze Administratora2
 
-## 5. Analiza możliwych sytuacji błędnych i proponowana ich obsługa
+## 4. Analiza możliwych sytuacji błędnych i proponowana ich obsługa
 ### Przy próbie połączenia się z serwerem
 1. **Próba połaczenia się z serwerem, który nie istnieje lub adres ip klienta znajduje się na jego czarnej liście**
 	- **Obsługa:** program kliencki nie będzie w stanie nawiązać połączenia, ponieważ nie ma takiego serwera w sieci. W programie klienckim wyswietli się stosowny komunikat
@@ -100,7 +100,7 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 12. **Użytkownik próbuje dołączyć do kanału o nazwie nie spełniającej [zasad składniowych](https://datatracker.ietf.org/doc/html/rfc1459#section-2.3.1)**
 	- **Obsluga**: Serwer odpowiada ERR_BADCHANMASK. Operacja zakończona niepowodzeniem.
 
-## 6. Wybrane środowisko sprzętowo-programowe
+## 5. Wybrane środowisko sprzętowo-programowe
 
 - Serwer działać będzie na systemie operacyjnym **Linux**
 - Realizacja serwera w języku `Python`
