@@ -233,3 +233,32 @@ Bloki funkcjonalne serwera
         - klient-serwer
         - wielu klientów - serwer
         - wielu klientów - wiele serwerów
+## 9. Podział prac w zespole
+- Wojciech Sarwiński:
+    - Blok Interfejsu Połączeń
+    - Blok Menadżera Sesji
+- Bartosz Nowak:
+    - Blok Menadżera Serwerów
+    - Blok Menadżera Przekierowań
+- Łukasz Suchołbiak
+    - Blok Parsowania Wiadomości
+    - Blok Uwierzytelniania
+    - Blok Menadżera Sesji
+
+## 10. Przewidywane funkcje do zademonstrowania w ramach odbioru częściowego
+W ramach odbioru częściowego przewidujemy powstanie prostego programu klienckiego, oraz prostego programu serwera umożliwiającego obsługę wiecej niż 1 klienta.
+Funkcje:
+- Połączenie klienta do niezabezpieczonego serwera:
+    - sprawdzenie unikalności oraz poprawności pseudonimu
+    - określenie użytkownika (USER) i sprawdzenie poprawności wymaganych pól
+    - zarejestrowanie ustanowionego połączenia przez serwer
+- Przejście klienta do trybu operatora serwera:
+    - obsługa wiadomości OPER - sprawdzenie poprawności pary (użytkownik, hasło) 
+    - przy poprawnych danych nadanie użytkownikowi praw operatora
+- Tworzenie kanału komunikacyjnego:
+    - walidacja nazwy kanału
+    - nadanie użytkownikowi, który stworzył kanał uprawnień chanopa (operatora kanału)
+- Możliwość dołączenia do istniejącego, niezabezpieczonego kanału
+- Przesyłanie wiadomości do użytkowników obecnych na danym kanale
+- Obsługa wyjścia z kanału (PART)
+- Obsługa zakończenia sesji klienta (QUIT)
