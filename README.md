@@ -74,6 +74,9 @@ Bloki funkcjonalne serwera
     * Akceptuje i zarządza połączeniami serwera z serwerem przy pomocy gniazd
     * Zarządza komunikacją z gniazdami
     * Zapewnia wielowątkową obsługę gniazd
+- Blok Parsowania wiadomości
+    * Sprawdza poprawność wiadomości
+    * Przekierowuje wiadomości do odpowiednich bloków w odpowiednim formacie
 - Blok Uwierzytelniania
     * Zarządza logowaniem użytkowników
     * Zapewnia niepowtarzalność nazw użytkowników
@@ -100,3 +103,6 @@ Bloki funkcjonalne serwera
     * Wysyła wiadomości do wszystkich klientów znajdujących się na kanale połączonych do serwera
     * Przekierowuje wiadomości prywatne do odpowiednich połączonych bezpośrednio serwerów
     * Przekierowuje wiadomości wysłane na kanał do serwerów, do których połączeni są użytkownicy połączeni z danym kanałem
+
+
+![Diagram](diagram.png)
