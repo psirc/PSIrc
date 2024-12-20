@@ -73,32 +73,32 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 ## 4. Analiza możliwych sytuacji błędnych i proponowana ich obsługa
 ### Przy próbie połączenia się z serwerem
 1. **Próba połaczenia się z serwerem, który nie istnieje lub adres ip klienta znajduje się na jego czarnej liście**
-	- **Obsługa:** program kliencki nie będzie w stanie nawiązać połączenia, ponieważ nie ma takiego serwera w sieci. W programie klienckim wyswietli się stosowny komunikat
+    - **Obsługa:** program kliencki nie będzie w stanie nawiązać połączenia, ponieważ nie ma takiego serwera w sieci. W programie klienckim wyswietli się stosowny komunikat
 2. **Użytkownik przy próbie połączenia się z serwerem zabezpieczonym hasłem podaje błędne hasło**
-	- **Obsługa:** Serwer zrywa połączenie. Użytkownik powinien zmienić hasło i jeszcze raz podjąć próbę połączenia się z serwerem.
+    - **Obsługa:** Serwer zrywa połączenie. Użytkownik powinien zmienić hasło i jeszcze raz podjąć próbę połączenia się z serwerem.
 3. **Użytkownik próbuje połączyć się z serwerem używając pesudonimu, który jest już zajęty**
-	- **Obsługa**: Serwer odpowiada ERR_NICKNAMEINUSE. Użytkownik powinien zmienić zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem.
+    - **Obsługa**: Serwer odpowiada ERR_NICKNAMEINUSE. Użytkownik powinien zmienić zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem.
 4. **Użytkownik próbuje połączyć się z serwerem nie podając pseudonimu**
-	- **Obsługa**: Serwer odpowiada ERR_NONICKNAMEGIVEN. Użytkownik powinien zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem.
+    - **Obsługa**: Serwer odpowiada ERR_NONICKNAMEGIVEN. Użytkownik powinien zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem.
 5. **Użytkownik próbuje połączyć się z serwerem podając pseudonim nie spełniający [zasad składniowych](https://datatracker.ietf.org/doc/html/rfc1459#section-2.3.1)**
-	- **Obsługa**: Serwer odpowiada ERR_ERRONEUSNICKNAME. Użytkownik powinien zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem
+    - **Obsługa**: Serwer odpowiada ERR_ERRONEUSNICKNAME. Użytkownik powinien zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem
 6. **Użytkownik próbuję połączyć się z serwerem nie podając nazwy użytkownika i/lub prawdziwego imienia**
-	- **Obsługa**: Serwer odpowiada ERR_NEEDMOREPARAMS. Użytkownik powinien uzupełnić brakujące dane i jeszcze raz podjąć próbę połączenia się z serwerem.
+    - **Obsługa**: Serwer odpowiada ERR_NEEDMOREPARAMS. Użytkownik powinien uzupełnić brakujące dane i jeszcze raz podjąć próbę połączenia się z serwerem.
 ### Po połączeniu się z serwerem (poprawnym zarejestrowaniu połączenia)
 #### Związane z serwerem
 7. **Użytkownik próbuje uzyskać uprawnienia do zarządzania serwerem nie podając nazwy i/lub hasła**
-	- **Obsługa**: Serwer odpowiada ERR_NEEDMOREPARAMS. Uprawnienia do zarządzania serwerem nie zostają przyznane użytkownikowi.
+    - **Obsługa**: Serwer odpowiada ERR_NEEDMOREPARAMS. Uprawnienia do zarządzania serwerem nie zostają przyznane użytkownikowi.
 8. **Użytkownik próbuje uzyskać uprawnienia do zarządzania serwerem podając błędną nazwe i/lub hasło operatora**
-	- **Obsługa**: Serwer odpowiada ERR_PASSWDMISMATCH. Uprawnienia do zarządzania serwerem nie zostają przyznane.
+    - **Obsługa**: Serwer odpowiada ERR_PASSWDMISMATCH. Uprawnienia do zarządzania serwerem nie zostają przyznane.
 #### Związane z kanałami
 9. **Użytkownik próbuje dołączyć do kanału zabezpieczonego hasłem podając błędne hasło, lub nie podając hasła**
-	- **Obsługa**: Serwer odpowiada ERR_BADCHANNELKEY. Operacja zakończona niepowodzeniem.
+    - **Obsługa**: Serwer odpowiada ERR_BADCHANNELKEY. Operacja zakończona niepowodzeniem.
 10. **Użytkownik próbuje dołączyć do kanału na którym został zbanowany**
-	- **Obsługa**: Serwer odpowiada ERR_BANNEDFROMCHAN. Operacja zakończona niepowodzeniem.
+    - **Obsługa**: Serwer odpowiada ERR_BANNEDFROMCHAN. Operacja zakończona niepowodzeniem.
 11. **Użytkownik próbuje dołączyć do kanału w którym zapełnione są wszystkie miejsca**
-	- **Obsługa**: Serwer odpowiada ERR_CHANNELISFULL. Operacja zakończona niepowodzeniem. Użytkownik powinien poczekać, aż miejsce na kanale się zwolni, a następnie spróbować dołączyć ponownie
+    - **Obsługa**: Serwer odpowiada ERR_CHANNELISFULL. Operacja zakończona niepowodzeniem. Użytkownik powinien poczekać, aż miejsce na kanale się zwolni, a następnie spróbować dołączyć ponownie
 12. **Użytkownik próbuje dołączyć do kanału o nazwie nie spełniającej [zasad składniowych](https://datatracker.ietf.org/doc/html/rfc1459#section-2.3.1)**
-	- **Obsluga**: Serwer odpowiada ERR_BADCHANMASK. Operacja zakończona niepowodzeniem.
+    - **Obsluga**: Serwer odpowiada ERR_NOSUCHCHANNEL. Operacja zakończona niepowodzeniem.
 
 ## 5. Wybrane środowisko sprzętowo-programowe
 
@@ -208,3 +208,14 @@ Bloki funkcjonalne serwera
         - OK
         - ERR_NOSUCHNICK
         - ERR_NOSUCHCHANNEL
+
+## 8. Sposób testowania
+- Testy jednostkowe:
+    - sprawdzające działanie funkcji weryfikujących zgodność argumentów z docelowym formatem (pseudonimy użytkowników, nazwy użytkowników, nazwy kanałów)
+    - weryfikujące obsługę wiadomości przez serwer (e.g. PASS, NICK, USER, OPER, JOIN ...)
+    - weryfikujące budowanie wiadomości przez program kliencki, oraz reakcje na (udawane) odpowiedzi serwera
+- Testy integracyjne 
+    - weryfikujące poprawność przebiegu komunikacji:
+        - klient-serwer
+        - wielu klientów - serwer
+        - wielu klientów - wiele serwerów
