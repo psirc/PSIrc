@@ -40,12 +40,27 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 3. Użytkownik łączy się z kanałem `#znajomi`, podając pseudonim i hasło dostępu
 4. Użytkownik komunikuje się ze znajomimi
 
-**Tworzenie serwera IRC**
+**Tworzenie kanału**
+
+*Aktor: Użytkownik*
+1. Użytkownik łączy sie do serwera IRC
+2. Użytkownik tworzy kanał poprzez próbe połączenia z kanałem o nieistniejącej nazwie
+3. Kanał zostaje stworzony
+4. Użytkownik zostaje operatorem stworzonego kanału (chanop)
+
+**Tworzenie serwera IRC bez uwierzytelnienia**
 
 *Aktor: Administrator*
 1. Administrator konfiguruje parametry uruchomienia serwera
 2. Administrator uruchamia serwer IRC w sieci lokalnej
 3. Administrator ustawia metodę uwierzytelniania na brak
+
+**Tworzenie serwera IRC zabezpieczonego hasłem dostępu**
+
+*Aktor: Administrator*
+1. Administrator konfiguruje parametry uruchomienia serwera
+2. Administrator uruchamia serwer IRC w sieci lokalnej
+3. Administrator ustawia metodę uwierzytelniania na podane hasło dostępu
 
 **Łączenie serwerów IRC**
 
@@ -54,6 +69,36 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 2. Administrator1 zgłasza chęć połączenia do serwera
 3. Administrator2 akceptuje prośbę o połączenie
 4. Administrator1 ma teraz dostęp do kanałów obecnych na serwerze Administratora2
+
+## 4. Analiza możliwych sytuacji błędnych i proponowana ich obsługa
+### Przy próbie połączenia się z serwerem
+1. **Próba połaczenia się z serwerem, który nie istnieje lub adres ip klienta znajduje się na jego czarnej liście**
+	- **Obsługa:** program kliencki nie będzie w stanie nawiązać połączenia, ponieważ nie ma takiego serwera w sieci. W programie klienckim wyswietli się stosowny komunikat
+2. **Użytkownik przy próbie połączenia się z serwerem zabezpieczonym hasłem podaje błędne hasło**
+	- **Obsługa:** Serwer zrywa połączenie. Użytkownik powinien zmienić hasło i jeszcze raz podjąć próbę połączenia się z serwerem.
+3. **Użytkownik próbuje połączyć się z serwerem używając pesudonimu, który jest już zajęty**
+	- **Obsługa**: Serwer odpowiada ERR_NICKNAMEINUSE. Użytkownik powinien zmienić zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem.
+4. **Użytkownik próbuje połączyć się z serwerem nie podając pseudonimu**
+	- **Obsługa**: Serwer odpowiada ERR_NONICKNAMEGIVEN. Użytkownik powinien zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem.
+5. **Użytkownik próbuje połączyć się z serwerem podając pseudonim nie spełniający [zasad składniowych](https://datatracker.ietf.org/doc/html/rfc1459#section-2.3.1)**
+	- **Obsługa**: Serwer odpowiada ERR_ERRONEUSNICKNAME. Użytkownik powinien zmienić pseudonim i jeszcze raz podjąć próbę połączenia się z serwerem
+6. **Użytkownik próbuję połączyć się z serwerem nie podając nazwy użytkownika i/lub prawdziwego imienia**
+	- **Obsługa**: Serwer odpowiada ERR_NEEDMOREPARAMS. Użytkownik powinien uzupełnić brakujące dane i jeszcze raz podjąć próbę połączenia się z serwerem.
+### Po połączeniu się z serwerem (poprawnym zarejestrowaniu połączenia)
+#### Związane z serwerem
+7. **Użytkownik próbuje uzyskać uprawnienia do zarządzania serwerem nie podając nazwy i/lub hasła**
+	- **Obsługa**: Serwer odpowiada ERR_NEEDMOREPARAMS. Uprawnienia do zarządzania serwerem nie zostają przyznane użytkownikowi.
+8. **Użytkownik próbuje uzyskać uprawnienia do zarządzania serwerem podając błędną nazwe i/lub hasło operatora**
+	- **Obsługa**: Serwer odpowiada ERR_PASSWDMISMATCH. Uprawnienia do zarządzania serwerem nie zostają przyznane.
+#### Związane z kanałami
+9. **Użytkownik próbuje dołączyć do kanału zabezpieczonego hasłem podając błędne hasło, lub nie podając hasła**
+	- **Obsługa**: Serwer odpowiada ERR_BADCHANNELKEY. Operacja zakończona niepowodzeniem.
+10. **Użytkownik próbuje dołączyć do kanału na którym został zbanowany**
+	- **Obsługa**: Serwer odpowiada ERR_BANNEDFROMCHAN. Operacja zakończona niepowodzeniem.
+11. **Użytkownik próbuje dołączyć do kanału w którym zapełnione są wszystkie miejsca**
+	- **Obsługa**: Serwer odpowiada ERR_CHANNELISFULL. Operacja zakończona niepowodzeniem. Użytkownik powinien poczekać, aż miejsce na kanale się zwolni, a następnie spróbować dołączyć ponownie
+12. **Użytkownik próbuje dołączyć do kanału o nazwie nie spełniającej [zasad składniowych](https://datatracker.ietf.org/doc/html/rfc1459#section-2.3.1)**
+	- **Obsluga**: Serwer odpowiada ERR_BADCHANMASK. Operacja zakończona niepowodzeniem.
 
 ## 5. Wybrane środowisko sprzętowo-programowe
 
