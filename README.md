@@ -151,3 +151,60 @@ Bloki funkcjonalne serwera
 
 
 ![Diagram](diagram.png)
+
+## 7. Listy komunikatów
+
+- Dołączanie do serwera chronionego hasłem
+    * Komenda: PASS
+    * parametry: <hasło do serwera>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NEEDMOREPARAMS
+        - ERR_ALREADYREGISTRED
+- Opuszczanie serwera
+    * komenda: QUIT
+- Ustalanie pseudonimu
+    * Komenda: NICK
+    * parametry: <nowy pseudonim>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NEEDMOREPARAMS
+        - ERR_NICKCOLLISION
+- Dołączanie do kanału
+    * Komenda: JOIN
+    * parametey: <nazwa kanału> <opcjonalnie hasło>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NEEDMOREPARAMS
+        - ERR_NOSUCHCHANNEL
+        - ERR_BADCHANNELKEY
+- Opuszczanie kanału
+    * Komenda: PART
+    * parametry: <nazwa kanału>
+    * możliwe odpowiedzi
+        - OK
+        - ERR_NEEDMOREPARAMS
+        - ERR_NOSUCHCHANNEL
+        - ERR_NOTONCHANNEL
+- Wyrzucanie klienta z kanału
+    * Komenda: KICK
+    * parametry: <nazwa kanału> <nazwa użytkownika>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NEEDMOREPARAMS
+        - ERR_NOSUCHCHANNEL
+        - ERR_NOTONCHANNEL
+        - ERR_CHANOPRIVSNEEDED
+- Wysyłanie wiadomości prywatnej
+    * Komenda: PRIVMSG
+    * parametry: <nazwa użytkownika> : <treść wiadomości>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NOSUCHNICK
+- Wysyłanie wiadomości na kanał
+    * Komenda: PRIVMSG
+    * parametry: # <nazwa kanału> : <treść wiadomości>
+    * możliwe odpowiedzi:
+        - OK
+        - ERR_NOSUCHNICK
+        - ERR_NOSUCHCHANNEL
