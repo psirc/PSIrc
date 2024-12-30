@@ -15,7 +15,7 @@ class Prefix:
     def __init__(self, sender: str, user: str = "", host: str = "") -> None:
         self.sender = sender
         self.user = user
-        self.host = host
+        self.host = host.lower()
         self._set_hostname()
 
     def _set_hostname(self) -> None:

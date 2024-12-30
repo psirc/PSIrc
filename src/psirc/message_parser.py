@@ -24,7 +24,7 @@ class MessageParser:
     def parse_message(cls, data: str) -> Message:
         match = re.match(cls.message_regex, data)
         prefix, command, params, trailing = match.group("prefix", "cmd", "params", "trail")
-
+        print(prefix)
         prefix = cls._parse_prefix(prefix) if prefix else None
         print(prefix)
         print(command)

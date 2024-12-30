@@ -11,6 +11,7 @@ import pytest
         ("PRIVMSG #fishing :Going fishing today!", None),
         (":slc32!matt@hostname.net PRIVMSG #cs2 :playing inferno now", Prefix("slc32", "matt", "hostname.net")),
         (":subnet.example.com PING client1", Prefix("subnet.example.com")),
+        (":Nick!nikodem@dOmaIN.com PING client2", Prefix("Nick", "nikodem", "domain.com")),
     ],
 )
 def test_parse_prefix(text, prefix):

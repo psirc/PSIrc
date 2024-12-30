@@ -58,3 +58,20 @@ import pytest
 )
 def test_validate_nickname(nick, expected_result):
     assert IRCValidator.validate_nick(nick) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("host", "expected_result"),
+    [
+        ("host", True),
+        ("example.net", True),
+        ("many.subdomains.here.edu.pl", True),
+        ("number12.edu.pl", True),
+        ("correct-website.pl", True),
+        ("gas78-company2.com", True),
+        ("my-domain.gggg.pl", True),
+        ("CAP.DOMAIN", True),
+    ],
+)
+def test_validate_host(host, expected_result):
+    assert IRCValidator.validate_host(host) == expected_result
