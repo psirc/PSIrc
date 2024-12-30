@@ -26,5 +26,5 @@ class IRCValidator:
         try:
             socket.inet_aton(ip_addr)
             return True
-        except socket.socket:
+        except socket.error:
             return False
