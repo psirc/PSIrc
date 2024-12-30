@@ -26,6 +26,8 @@ class Prefix:
         return f":{self.sender}{'!' if hostname else ''}{hostname}"
 
     def __eq__(self, other: Prefix) -> bool:
+        if not isinstance(other, Prefix):
+            return NotImplemented
         return all((self.sender == other.sender, self.user == other.user, self.host == other.host))
 
 
