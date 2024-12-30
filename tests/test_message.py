@@ -40,16 +40,6 @@ def test_prefix_string(prefix, expected_str):
     assert str(prefix) == expected_str
 
 
-# def test_prefix_string_name():
-# p = Prefix("john")
-# assert str(p) == ":example.com!john "
-#
-#
-# def test_prefix_host():
-# p = Prefix("john", "host.net")
-# assert str(p) == ":example.com!john@host.net "
-#
-#
 # def test_message():
 # p = Prefix()
 # cmd = "PRIVMSG"

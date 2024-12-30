@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass, field
 
 
@@ -23,6 +24,9 @@ class Prefix:
     def __str__(self) -> str:
         hostname = f"{self.user}{'@' if self.host else ''}{self.host}"
         return f":{self.sender}{'!' if hostname else ''}{hostname}"
+
+    def __eq__(self, other: Prefix) -> bool:
+        return all((self.sender == other.sender, self.user == other.user, self.host == other.host))
 
 
 # TODO: find a way to better represent params in code

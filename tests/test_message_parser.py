@@ -5,9 +5,17 @@ import pytest
 
 @pytest.fixture
 def parser():
-    return MessageParser
+    return MessageParser()
 
 
-# @pytest.mark.parametrize(("text", "command"), [("fdfdfd", "fdfdfd")])
-# def test_parse_command(parser, text, command):
-#     assert True
+@pytest.mark.parametrize(
+    ("text", "command"),
+    [
+        (":prefix JOIN", "fdfdfd"),
+        (":ojeju12 NICK newnick", "eeee"),
+        ("PRIVMSG #fishing :Going fishing today!", "fffff"),
+    ],
+)
+def test_parse_command(parser, text, command):
+    ret = parser.parse_message(text)
+    assert True
