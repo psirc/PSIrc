@@ -10,19 +10,19 @@ class Prefix:
         user - string, recepient of the message (name)
         host - string, recepient of the message (host)
     """
-    sender: str = ""
 
-    def __init__(self, user: str = "", host: str = "") -> None:
-        self._user = user
-        self._host = host
+    def __init__(self, sender: str, user: str = "", host: str = "") -> None:
+        self.sender = sender
+        self.user = user
+        self.host = host
         self._set_hostname()
 
     def _set_hostname(self) -> None:
-        self._hostname = f"{self._user}{'@' if self._host else ''}{self._host}"
+        self._hostname = f"{self.user}{'@' if self.host else ''}{self.host}"
 
     def __str__(self) -> str:
-        hostname = f"{self._user}{'@' if self._host else ''}{self._host}"
-        return f":{getattr(self, "sender")}{'!' if hostname else ''}{hostname} "
+        hostname = f"{self.user}{'@' if self.host else ''}{self.host}"
+        return f":{self.sender}{'!' if hostname else ''}{hostname}"
 
 
 # TODO: find a way to better represent params in code

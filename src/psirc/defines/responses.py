@@ -1,0 +1,35 @@
+from enum import Enum
+
+
+class Response(Enum):
+
+    NONE = 300
+    USERHOST = 302
+
+    # Away message
+    AWAY = 305
+    UNAWAY = 301
+    NOAWAY = 305
+
+    # WHOIS Message
+    WHOISUSER = 311
+    WHOISSERVER = 312
+    WHOISOPERATOR = 313
+    WHOISIDLE = 317
+    ENDOFWHOIS = 318
+    WHOISCHANNELS = 319
+
+    # Error responses
+    NOSUCHNICK = 401
+    NOSUCHSERVER = 402
+    NOSUCHCHANNEL = 403
+    CANNOTSENDTOCHAN = 404
+    TOOMANYCHANNELS = 405
+    WASNOSUCHNICK = 406
+    TOOMANYTARGETS = 407
+    NOORIGIN = 409
+    NORECIPIENT = 411
+    NOTEXTTOSEND = 412
+
+
+# TODO: fill up the list
