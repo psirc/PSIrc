@@ -1,12 +1,13 @@
 from psirc.message_parser import MessageParser
-from psirc.message import Prefix
+from psirc.message import Prefix, Message
+from psirc.defines.responses import Command
 import pytest
 
 
 @pytest.mark.parametrize(
     ("text", "prefix"),
     [
-        (":sender.com JOIN", Prefix("sender.com")),
+        (":sender.com JOIN #channel", Prefix("sender.com")),
         (":ojeju12 NICK newnick", Prefix("ojeju12")),
         ("PRIVMSG #fishing :Going fishing today!", None),
         (":slc32!matt@hostname.net PRIVMSG #cs2 :playing inferno now", Prefix("slc32", "matt", "hostname.net")),
@@ -15,4 +16,23 @@ import pytest
     ],
 )
 def test_parse_prefix(text, prefix):
-    assert prefix == MessageParser.parse_message(text).prefix
+    msg = MessageParser.parse_message(text)
+    assert isinstance(msg, Message)
+    assert prefix == msg.prefix
+
+
+@pytest.mark.parametrize(
+    ("text", "command"),
+    [
+        (":sender.com JOIN #channel", Command.JOIN),
+        (":ojeju12 NICK newnick", Command.NICK),
+        ("PRIVMSG #fishing :Going fishing today!", Command.PRIVMSG),
+        (":slc32!matt@hostname.net PRIVMSG #cs2 :playing inferno now", Command.PRIVMSG),
+        (":subnet.example.com PING client1", Command.PING),
+        (":Nick!nikodem@dOmaIN.com PING client2", Command.PING),
+    ],
+)
+def test_parse_command(text, command):
+    msg = MessageParser.parse_message(text)
+    assert isinstance(msg, Message)
+    assert command == msg.command

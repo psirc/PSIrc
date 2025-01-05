@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from psirc.defines.responses import Command
 
 
 class Prefix:
@@ -25,7 +26,7 @@ class Prefix:
         hostname = f"{self.user}{'@' if self.host else ''}{self.host}"
         return f":{self.sender}{'!' if hostname else ''}{hostname}"
 
-    def __eq__(self, other: Prefix) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Prefix):
             return NotImplemented
         return all((self.sender == other.sender, self.user == other.user, self.host == other.host))
@@ -43,7 +44,7 @@ class Params:
 @dataclass(kw_only=True)
 class Message:
     prefix: Prefix | None = field()
-    command: str = field()
+    command: Command = field()
     params: Params | None = field()
 
     def __str__(self) -> str:
