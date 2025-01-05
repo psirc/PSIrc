@@ -1,5 +1,5 @@
 from psirc.message_parser import MessageParser
-from psirc.message import Prefix, Message
+from psirc.message import Prefix, Message, Params
 from psirc.defines.responses import Command
 import pytest
 
@@ -36,3 +36,21 @@ def test_parse_command(text, command):
     msg = MessageParser.parse_message(text)
     assert isinstance(msg, Message)
     assert command == msg.command
+
+
+@pytest.mark.parametrize(
+    ("text", "params"),
+    [
+        (":sender.com JOIN #channel", {"channel": "#channel"}),
+        (":ojeju12 NICK newnick", {"nick": "newnick"}),
+        ("PRIVMSG #fishing :Going fishing today!", {"receiver": "#fishing", "trailing": "Going fishing today!"}),
+        (":slc32!matt@hostname.net PRIVMSG #cs2 :playing inferno now", {"receiver": "#cs2", "trailing": "playing inferno now"}),
+        (":subnet.example.com PING client1", {"receiver": "client1"}),
+        (":Nick!nikodem@dOmaIN.com PING client2", {"receiver": "client2"}),
+    ],
+)
+def test_parse_params(text, params):
+    msg = MessageParser.parse_message(text)
+    assert isinstance(msg, Message)
+    assert isinstance(msg.params, Params)
+    assert params == msg.params.params

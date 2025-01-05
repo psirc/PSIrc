@@ -8,7 +8,7 @@ from psirc.message import Params
 from psirc.defines.responses import Command
 
 CMD_PARAMS = {
-    Command.RPL_AWAY: ["nick", "away_message"],
+    Command.RPL_AWAY: ["nick", "trailing"],
     Command.RPL_WHOISUSER: ["nick", "user", "host", "real_name"],
     Command.RPL_WHOISSERVER: ["nick", "server", "server_info"],
     Command.RPL_WHOISOPERATOR: ["nick"],
@@ -22,7 +22,7 @@ CMD_PARAMS = {
     Command.ERR_WASNOSUCHNICK: ["nick"],
     Command.ERR_TOOMANYTARGETS: ["target"],
     Command.NICK: ["nick"],
-    Command.PRIVMSG: ["receiver", "text"],
+    Command.PRIVMSG: ["receiver", "trailing"],
     Command.PING: ["receiver"],
     Command.JOIN: ["channel"]
 }
@@ -45,20 +45,19 @@ CMD_MESSAGES = {
 }
 
 
-def parametrize(response: Command, **kwargs: str) -> Params | None:
+def parametrize(command: Command, **kwargs: str) -> Params | None:
     """
     Get a valid Params object for a given reply/error
     """
-    params = []
-    if response in CMD_PARAMS:
-        for param in CMD_PARAMS[response]:
+    params = {}
+    if command in CMD_PARAMS:
+        for param in CMD_PARAMS[command]:
             try:
-                params.append(kwargs[param])
-                break
+                params[param] = kwargs[param]
             except KeyError:
-                print(f"Response {response.name} requires: {[param for param in CMD_PARAMS[response]]} as arguments")
+                print(f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments")
                 return None
-    if response in CMD_MESSAGES:
-        params.append(f":{CMD_MESSAGES[response]}")
+    if command in CMD_MESSAGES:
+        params["response"] = f":{CMD_MESSAGES[command]}"
 
     return Params(params)

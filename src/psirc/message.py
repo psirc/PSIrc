@@ -34,7 +34,7 @@ class Prefix:
 
 # TODO: find a way to better represent params in code
 class Params:
-    def __init__(self, params: list | None = None) -> None:
+    def __init__(self, params: dict | None = None) -> None:
         self.params = params if params else []
 
     def __str__(self) -> str:

@@ -100,6 +100,7 @@ class MessageParser:
         print(f"PARAMS: {params_list}")
         print(f"CMD_PARAMS: {CMD_PARAMS[command]}")
         params_dict = {CMD_PARAMS[command][i]: param for i, param in enumerate(params_list)}
+        print(f"Params dict: {params_dict}")
         return parametrize(command, **params_dict)
 
     @classmethod
