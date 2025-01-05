@@ -1,61 +1,63 @@
 # response_params.py
-# 
+#
 # This file defines all error parameters and messages
 # A function that returns a Params object is also defined
 # the function will ensure that the message is defined properly
 
 from psirc.message import Params
-import psirc.defines.response_codes as rpl
-import psirc.defines.error_codes as err
+from psirc.defines.responses import Command
 
 CMD_PARAMS = {
-        rpl.AWAY: ["nick", "away_message"],
-        rpl.WHOISUSER: ["nick", "user", "host", "real_name"],
-        rpl.WHOISSERVER: ["nick", "server", "server_info"],
-        rpl.WHOISOPERATOR: ["nick"],
-        rpl.WHOISIDLE: ["nick", "seconds_idle"],
-        rpl.ENDOFWHOIS: ["nick"],
-        rpl.WHOISCHANNELS: ["nick", "channel"],
-        err.NOSUCHNICK: ["nick"],
-        err.NOSUCHSERVER: ["server"],
-        err.CANNOTSENDTOCHAN: ["channel"],
-        err.TOOMANYCHANNELS: ["channel"],
-        err.WASNOSUCHNICK: ["nick"],
-        err.TOOMANYTARGETS: ["target"],
-    }
+    Command.RPL_AWAY: ["nick", "trailing"],
+    Command.RPL_WHOISUSER: ["nick", "user", "host", "real_name"],
+    Command.RPL_WHOISSERVER: ["nick", "server", "server_info"],
+    Command.RPL_WHOISOPERATOR: ["nick"],
+    Command.RPL_WHOISIDLE: ["nick", "seconds_idle"],
+    Command.RPL_ENDOFWHOIS: ["nick"],
+    Command.RPL_WHOISCHANNELS: ["nick", "channel"],
+    Command.ERR_NOSUCHNICK: ["nick"],
+    Command.ERR_NOSUCHSERVER: ["server"],
+    Command.ERR_CANNOTSENDTOCHAN: ["channel"],
+    Command.ERR_TOOMANYCHANNELS: ["channel"],
+    Command.ERR_WASNOSUCHNICK: ["nick"],
+    Command.ERR_TOOMANYTARGETS: ["target"],
+    Command.NICK: ["nick"],
+    Command.PRIVMSG: ["receiver", "trailing"],
+    Command.PING: ["receiver"],
+    Command.JOIN: ["channel"]
+}
 
 CMD_MESSAGES = {
-        rpl.UNAWAY: "You are no longer marked as being away",
-        rpl.WHOISOPERATOR: "Is a server Operator",
-        rpl.WHOISIDLE: "seconds idle",
-        rpl.ENDOFWHOIS: "end of /WHOIS list",
-        err.NOSUCHNICK: "No such nick/channel",
-        err.NOSUCHSERVER: "No such server",
-        err.NOSUCHCHANNEL: "No such channel",
-        err.CANNOTSENDTOCHAN: "Cannot send to channel",
-        err.TOOMANYCHANNELS: "You have joined too many channels",
-        err.WASNOSUCHNICK: "There was no such nickname",
-        err.TOOMANYTARGETS: "Duplicate recipients, No message delivered",
-        err.NOORIGIN: "No origin specified",
-        err.NORECIPIENT: "No recipient given",
-        err.NOTEXTTOSEND: "No text to send",
-    }
+    Command.RPL_UNAWAY: "You are no longer marked as being away",
+    Command.RPL_WHOISOPERATOR: "Is a server Operator",
+    Command.RPL_WHOISIDLE: "seconds idle",
+    Command.RPL_ENDOFWHOIS: "end of /WHOIS list",
+    Command.ERR_NOSUCHNICK: "No such nick/channel",
+    Command.ERR_NOSUCHSERVER: "No such server",
+    Command.ERR_NOSUCHCHANNEL: "No such channel",
+    Command.ERR_CANNOTSENDTOCHAN: "Cannot send to channel",
+    Command.ERR_TOOMANYCHANNELS: "You have joined too many channels",
+    Command.ERR_WASNOSUCHNICK: "There was no such nickname",
+    Command.ERR_TOOMANYTARGETS: "Duplicate recipients, No message delivered",
+    Command.ERR_NOORIGIN: "No origin specified",
+    Command.ERR_NORECIPIENT: "No recipient given",
+    Command.ERR_NOTEXTTOSEND: "No text to send",
+}
 
 
-def parametrize(response: int, **kwargs: str) -> Params:
+def parametrize(command: Command, **kwargs: str) -> Params | None:
     """
     Get a valid Params object for a given reply/error
     """
-    params = []
-    if response in CMD_PARAMS:
-        for param in CMD_PARAMS[response]:
+    params = {}
+    if command in CMD_PARAMS:
+        for param in CMD_PARAMS[command]:
             try:
-                params.append(kwargs[param])
-                break
+                params[param] = kwargs[param]
             except KeyError:
-                print(f"Response {response} requires: {[param for param in CMD_PARAMS[response]]} as arguments")
-    if response in CMD_MESSAGES:
-        params.append(f":{CMD_MESSAGES[response]}")
+                print(f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments")
+                return None
+    if command in CMD_MESSAGES:
+        params["response"] = f":{CMD_MESSAGES[command]}"
 
     return Params(params)
-
