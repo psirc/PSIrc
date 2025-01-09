@@ -29,7 +29,9 @@ class IRCServer:
                 # client not registered accept only PASS command
                 if message.command is not IRCCommand.PASS:
                     logging.warning("Client was not registered")
-                    client_socket.sendall(Message(prefix=Prefix(self.nick), command=Command(451)))
+                    # TODO : respond with not registered error
                     continue
+                # TODO: check for password
                 self._identities.add(client_socket)
-                # 
+                # OK, no response to client
+                continue
