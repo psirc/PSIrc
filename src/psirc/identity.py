@@ -3,7 +3,7 @@ from enum import Enum, auto
 
 class IdentityType(Enum):
     UNKNOWN = 0
-    CLIENT = auto()
+    USER = auto()
     SERVER = auto()
 
 
