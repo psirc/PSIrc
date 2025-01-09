@@ -2,7 +2,6 @@ import socket
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Any
 
 
 class ConnectionManager:
