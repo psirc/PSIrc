@@ -12,37 +12,31 @@ class NoSuchNick(Exception):
 
 class SessionManager:
     """
-    Manages the sockets connected to current server, including clients and server.
+    Manages the sockets connected to current server, including user and server.
     """
     def __init__(self) -> None:
-        self._clients: dict[str, socket.socket] = {}
+        self._users: dict[str, socket.socket] = {}
         self._servers: dict[str, socket.socket] = {}
-        self._clients_lock = threading.Lock()
+        self._users_lock = threading.Lock()
         self._servers_lock = threading.Lock()
 
-    def add_client(
-            self, client_name: str, client_socket: socket.socket) -> None:
+    def add_user(
+            self, user_nick: str, user_socket: socket.socket) -> None:
         """
-        Add client to the list of locally connected clients
+        Add user to the list of locally connected users
 
-        :param client_name: name of client
-        :type client_name: ``str``
-        :param client_socket: socket object representing client connection
-        :type client_socket: ``socket.socket``
-        :raises NickAlreadyInUse: if client name is already in use
+        :param user_nick: nick of user
+        :type user_nick: ``str``
+        :param user_socket: socket object representing user connection
+        :type user_socket: ``socket.socket``
+        :raises NickAlreadyInUse: if user nick is already in use
         :return: None
         :rtype: None
         """
-        with self._clients_lock:
-            if client_name in self._clients:
-                raise NickAlreadyInUse(f"Nick \"{client_name}\" in use")
-            
-            external_server = self._external_clients.get(client_name)
-            if external_server:
-                raise NickAlreadyInUse(
-                    f"Nick \"{client_name}\" in use on server {external_server}"
-                )
-            self._clients[client_name] = client_socket
+        with self._users_lock:
+            if user_nick in self._users:
+                raise NickAlreadyInUse(f"Nick \"{user_nick}\" in use")
+            self._users[user_nick] = user_socket
 
     def add_server(
             self, server_name: str, server_socket: socket.socket) -> None:
@@ -53,7 +47,7 @@ class SessionManager:
         :type server_name: ``str``
         :param server_socket: socket object representing server connection
         :type server_socket: ``socket.socket``
-        :raises NickAlreadyInUse: if client name is already in use
+        :raises NickAlreadyInUse: if server name is already in use
         :return: None
         :rtype: None
         """
@@ -62,17 +56,17 @@ class SessionManager:
                 raise NickAlreadyInUse(f"Server name \"{server_name}\" in use")
             self._servers[server_name] = server_socket
 
-    def get_client_socket(self, client_name: str) -> socket.socket | None:
+    def get_user_socket(self, user_nick: str) -> socket.socket | None:
         """
-        Retrieve socket object for a locally connected client.
+        Retrieve socket object for a locally connected user.
 
-        :param client_name: name of the client
-        :type client_name: ``str``
-        :return: client's socket if found, otherwise None
+        :param user_nick: name of the user
+        :type user_nick: ``str``
+        :return: users's socket if found, otherwise None
         :rtype: ``socket.socket`` or ``None``
         """
-        with self._clients_lock:
-            return self._clients.get(client_name)
+        with self._users_lock:
+            return self._users.get(user_nick)
 
     def get_server_socket(self, server_name: str) -> socket.socket | None:
         """
@@ -86,15 +80,15 @@ class SessionManager:
         with self._servers_lock:
             return self._servers.get(server_name)
 
-    def list_clients(self) -> list[str]:
+    def list_users(self) -> list[str]:
         """
-        List all locally connected clients
+        List all locally connected users
 
-        :return: list of locally connected clients
+        :return: list of locally connected users
         :rtype: ``list[str]``
         """
-        with self._clients_lock:
-            return list(self._clients.keys())
+        with self._servers_lock:
+            return list(self._users.keys())
 
     def list_servers(self) -> list[str]:
         """
@@ -106,26 +100,19 @@ class SessionManager:
         with self._servers_lock:
             return list(self._servers.keys())
 
-    def disconnect_client(self, client_name: str) -> None:
+    def remove_user(self, user_nick: str) -> None:
         """
-        Close connection of locally connected client
+        Remove user socket from 
 
         :param client_name: name of client
         :type client_name: ``str``
-        :raises NoSuchNick: if client is not locally connected
         :return: None
         :rtype: None
         """
-        with self._clients_lock:
-            client_socket = self._clients.pop(client_name, None)
+        with self._users_lock:
+            self._users.pop(user_nick, None)
 
-        if client_socket is None:
-            raise NoSuchNick(
-                f"Client \"{client_name}\" not connected to this server."
-            )
-        client_socket.close()
-
-    def disconnect_server(self, server_name: str) -> None:
+    def remove_server(self, server_name: str) -> None:
         """
         Close connection of locally connected server
 
@@ -136,10 +123,4 @@ class SessionManager:
         :rtype: None
         """
         with self._servers_lock:
-            server_socket = self._servers.pop(server_name, None)
-
-        if server_socket is None:
-            raise NoSuchNick(
-                f"Server \"{server_name}\" not connected to this server."
-            )
-        server_socket.close()
+            self._servers.pop(server_name, None)
