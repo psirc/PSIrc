@@ -30,6 +30,8 @@ class Command(Enum):
     ERR_NORECIPIENT = 411
     ERR_NOTEXTTOSEND = 412
 
+    ERR_NOTREGISTERED = 451
+
     # Responses greater than 1000
     # Representing text commands
     PASS = 1000
