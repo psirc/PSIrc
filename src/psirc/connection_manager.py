@@ -28,7 +28,7 @@ class ConnectionManager:
         self._running = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((self._host, self._port))
-        self._queue: Queue[tuple[socket.socket, bytes]] = Queue()
+        self._queue: Queue[tuple[socket.socket, str]] = Queue()
         self._connections: set[socket.socket] = {}
 
     def start(self) -> None:
@@ -77,27 +77,36 @@ class ConnectionManager:
             try:
                 data = client_socket.recv(4096)
                 if data:
-                    self._queue.put((client_socket, data))
+                    self._queue.put((client_socket, data.decode()))
                     continue
                 # TODO: handle disconnecting (send info downstream)
                 break
+
+            except UnicodeError:
+                logging.warning(
+                    "ConnectionManager: " +
+                    f"Message from {client_address} was not valid unicode"
+                )
+
             except OSError as e:
                 if not self._running and client_socket in self._connections:
                     logging.warning(
-                        f"ConnectionManager: {client_address} socket error: {e}"
+                        "ConnectionManager: " +
+                        f"{client_address} socket error: {e}"
                     )
                 break
+
         self.disconnect_client(client_socket)
 
     def get_message(
             self, blocking: bool = True
-    ) -> tuple[socket.socket, bytes]:
+    ) -> tuple[socket.socket, str]:
         """Get received message from a connected socket.
 
         :param blocking: block until new message is available
         :type blocking: ``bool``
         :return: Socket and data received from said socket
-        :rtype: ``Tuple[socket.socket, bytes]``
+        :rtype: ``Tuple[socket.socket, str]``
         """
         return self._queue.get(blocking)
 
