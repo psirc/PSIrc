@@ -8,6 +8,11 @@ class IdentityType(Enum):
 
 
 class Identity:
+    """Represents user or server.
+    attributes:
+        nick - ``str``, nick of user or server
+        type - ``IdentityType``, server or user
+    """
     def __init__(self) -> None:
         self.nick = ""
         self.type = IdentityType.UNKNOWN
