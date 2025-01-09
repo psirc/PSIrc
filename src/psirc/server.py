@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from message_parser import MessageParser
 from defines.commands import IRCCommand
 from identity_manager import IdentityManager
+from identity import IdentityType
 from session_manager import SessionManager
 
 import logging
@@ -23,20 +24,43 @@ class IRCServer:
         while self.running:
             client_socket, data = self._connection.get_message()
             message = MessageParser.parse_message(data)
+            if not message:
+                logging.warning("Invalid message from client")
+                # no response
+                continue
             identity = self._identities.get_identity(client_socket)
 
             if not identity:
                 # client not registered accept only PASS command
-                if message.command is not IRCCommand.PASS:
+                if message.command is IRCCommand.PASS:
+                    # TODO: check for password
+                    logging.info("New client registered")
+                    self._identities.add(client_socket)
+                    # OK, no response to client
+                else:
                     logging.warning("Client was not registered")
                     # TODO : respond with not registered error
-                    continue
-                # TODO: check for password
-                self._identities.add(client_socket)
-                # OK, no response to client
                 continue
+            
             if not identity.registered():
-                # client has not set NICK and/or USER
+                # client has not set NICK and (USER or SERVER)
+                if message.command is IRCCommand.NICK:
+                    # TODO : check for nick collisions
+                    identity.nick = message.params
+                elif message.command is IRCCommand.USER and identity.nick:
+                    # TODO : parse nick command
+                    identity.type = IdentityType.USER
+                # TODO : add for elif irccommand.server similar to command user
+                else:
+                    logging.warning("Client was not registered")
+                    # TODO : respond with not registered error
+                continue
+            # client is registered and can send commands
+
+            if message.command is IRCCommand.PRIVMSG:
+                self.handle_privmsg_command(client_socket, identity, message)
+            elif message.command is IRCCommand.JOIN:
+                self.handle_join_command(client_socket, identity, message)
+            else:
+                # TODO : respond with unknown command error
                 pass
-            # client is registered
-            if message.command is IRCCommand.
