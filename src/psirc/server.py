@@ -59,12 +59,15 @@ class IRCServer:
                     identity.type = IdentityType.USER
                     self._sockets.add_user(identity.nick, client_socket)
                 # TODO : add for elif irccommand.server similar to command user
+                elif message.command is IRCCommand.PASS:
+                    # TODO : respond with already registered error
+                    pass
                 else:
                     logging.warning("Client was not registered")
                     # TODO : respond with not registered error
                 continue
-            # client is registered and can send commands
 
+            # client is registered and can send other commands
             if message.command is IRCCommand.PRIVMSG:
                 self.handle_privmsg_command(client_socket, identity, message)
             elif message.command is IRCCommand.JOIN:
