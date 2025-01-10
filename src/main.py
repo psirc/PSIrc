@@ -6,6 +6,6 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-s = IRCServer("serw", "127.0.0.1", 6667)
+s = IRCServer("CSSetti", "127.0.0.1", 6667)
 
 s.start()

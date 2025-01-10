@@ -57,6 +57,9 @@ class IRCServer:
                     "connection_manager": self._connection
                 }
 
+                if message.command not in cmd_manager.CMD_FUNCTIONS.keys():
+                    continue
+
                 cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)
         except Exception as e:
             print(e)

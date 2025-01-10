@@ -15,6 +15,7 @@ CMD_PARAMS = {
     Command.RPL_WHOISIDLE: ["nickname", "seconds_idle"],
     Command.RPL_ENDOFWHOIS: ["nickname"],
     Command.RPL_WHOISCHANNELS: ["nickname", "channel"],
+    Command.RPL_WELCOME: ["nickname"],
     Command.ERR_NOSUCHNICK: ["nickname"],
     Command.ERR_NOSUCHSERVER: ["server"],
     Command.ERR_CANNOTSENDTOCHAN: ["channel"],

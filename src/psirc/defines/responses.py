@@ -45,6 +45,7 @@ class Command(Enum):
     JOIN = 1005
     PRIVMSG = 1007
     PING = 1008
+    PONG = 1009
 
     QUIT = 1010
 

@@ -208,7 +208,7 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
         response = Message(
                 prefix=None,
                 command=Command.RPL_WELCOME,
-                params=parametrize(Command.RPL_WELCOME)
+                params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname)
             )
         print(f"welcome packet: [{str(response)}]")
         client_socket.send(str(response).encode())
@@ -243,6 +243,8 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     if not identity or not identity.registered():
         return False
 
+    print("in privmsg")
+
     message.prefix = Prefix(identity.nickname, identity.username, nickname)
     if message.params:
         receiver = message.params["receiver"]
@@ -271,6 +273,19 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     logging.warning(f"Sending ERR: {message}")
     client_socket.send(str(message_to_send).encode())
     return True
+
+
+def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
+    identity = kwargs["identity"]
+    message = kwargs["message"]
+
+    if not identity or not identity.registered():
+        return False
+
+    if message.params:
+        receiver = message.params["receiver"]  # this is us
+    
+    ...
 
 
 CMD_FUNCTIONS = {
