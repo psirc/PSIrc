@@ -144,7 +144,7 @@ class IRCServer:
             client_socket: socket.socket,
             identity: Identity,
             message: Message
-    ) -> None:
+    ) -> bool:
         '''Try Handle USER command.
 
         Command: USER
@@ -202,7 +202,7 @@ class IRCServer:
             client_socket: socket.socket,
             identity: Identity,
             message: Message
-    ) -> None:
+    ) -> bool:
         if message.command is not IRCCommand.PRIVMSG:
             return False
         # TODO : implement private messaging
@@ -213,7 +213,7 @@ class IRCServer:
             client_socket: socket.socket,
             identity: Identity,
             message: Message
-    ) -> None:
+    ) -> bool:
         if message.command is not IRCCommand.JOIN:
             return False
         # TODO : implement joining rooms
