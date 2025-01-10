@@ -59,7 +59,10 @@ class IRCServer:
 
                 if message.command not in cmd_manager.CMD_FUNCTIONS.keys():
                     continue
+                try:
+                    cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)
+                except KeyError:
+                    logging.error(f"Unrecognized command: {message.command}.")
 
-                cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)
         except Exception as e:
             print(e)
