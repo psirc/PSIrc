@@ -1,4 +1,8 @@
 import socket
+import logging
+from typing import TypedDict
+from typing_extensions import Unpack
+
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
 from psirc.message import Message, Prefix, Params
@@ -7,10 +11,7 @@ from psirc.identity_manager import IdentityManager
 from psirc.identity import IdentityType, Identity
 from psirc.session_manager import SessionManager
 from psirc.response_params import parametrize
-from typing import TypedDict
-from typing_extensions import Unpack
-
-import logging
+from psirc.routing_manager import RoutingManager
 
 
 class CmdArgs(TypedDict):
@@ -211,7 +212,7 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
                 params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname)
             )
         print(f"welcome packet: [{str(response)}]")
-        client_socket.send(str(response).encode())
+        RoutingManager.respond_client(client_socket, response)
         # now that the three commands needed for registrations are present
         # server can verify user, and register user /
         # TODO: check user
@@ -236,7 +237,7 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     nickname = kwargs["nickname"]
     session_manager = kwargs["session_manager"]
     client_socket = kwargs["client_socket"]
-    
+
     if message.command is not Command.PRIVMSG:
         return False
 
@@ -246,33 +247,31 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     print("in privmsg")
 
     message.prefix = Prefix(identity.nickname, identity.username, nickname)
+
+    receiver = None
     if message.params:
         receiver = message.params["receiver"]
-    else:
-        return False
-    message_to_send = message
-
-    receiver_socket = session_manager.get_user_socket(receiver)
-    if receiver_socket:
-        logging.info(f"Forwarding private message: {message}")
-        receiver_socket.send(str(message_to_send).encode())
-        return True
 
     if not receiver:
-        message_to_send = Message(
+        message_error = Message(
             prefix=None,
             command=Command.ERR_NONICKNAMEGIVEN,
             params=parametrize(Command.ERR_NONICKNAMEGIVEN),
         )
-    else:
-        message_to_send = Message(
+        RoutingManager.respond_client(client_socket, message_error)
+        return False
+
+    message_to_send = message
+
+    try:
+        RoutingManager.send_to_user(receiver, message_to_send, session_manager)
+    except KeyError:
+        message_error = Message(
             prefix=None,
             command=Command.ERR_NOSUCHNICK,
             params=parametrize(Command.ERR_NOSUCHNICK, nickname=receiver),
         )
-    logging.warning(f"Sending ERR: {message}")
-    client_socket.send(str(message_to_send).encode())
-    return True
+        RoutingManager.respond_client(client_socket, message_error)
 
 
 def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
