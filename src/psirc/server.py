@@ -189,10 +189,10 @@ class IRCServer:
 
             response = Message(
                     prefix=None,
-                    command=Command.PING,
-                    params=parametrize(Command.PING, trailing="A1B2C3D4")
+                    command=Command.RPL_WELCOME,
+                    params=parametrize(Command.RPL_WELCOME)
                 )
-            print("ping: ", str(response))
+            print("ping: ", '[', str(response), ']')
             client_socket.send(str(response).encode())
             # now that the three commands needed for registrations are present
             # server can verify user, and register user /

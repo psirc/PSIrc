@@ -49,7 +49,7 @@ class Command(Enum):
     CAP = 2000
 
     def __str__(self) -> str:
-        return str(self.value) if self.value < 1000 else self.name
+        return f"{self.value:03}" if self.value < 1000 else self.name
 
 
 # TODO: fill up the list

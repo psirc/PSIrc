@@ -31,6 +31,7 @@ CMD_PARAMS = {
 }
 
 CMD_MESSAGES = {
+    Command.RPL_WELCOME: "Welcome to the server!",
     Command.RPL_UNAWAY: "You are no longer marked as being away",
     Command.RPL_WHOISOPERATOR: "Is a server Operator",
     Command.RPL_WHOISIDLE: "seconds idle",
