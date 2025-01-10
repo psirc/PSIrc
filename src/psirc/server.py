@@ -28,14 +28,14 @@ class IRCServer:
 
         try:
             while self.running:
-                result = self._connection.get_message()
+                result = self._connection.get_message(timeout=1)
                 if result is None:
                     continue
 
                 client_socket, data = result
                 message = MessageParser.parse_message(data)
                 if not message:
-                    logging.warning("Invalid message from client")
+                    logging.warning(f"Invalid message from client:\n{data}")
                     # server sends no response
                     continue
                 identity = self._identities.get_identity(client_socket)
@@ -63,7 +63,13 @@ class IRCServer:
 
                 if message.command not in cmd_manager.CMD_FUNCTIONS.keys():
                     continue
-
-                cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)
+                try:
+                    cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)
+                except KeyError:
+                    logging.warning(f"Unrecognized command: {message.command}.")
+        except KeyboardInterrupt:
+            self.running = False
         except Exception as e:
-            print(e)
+            logging.error(f"Aborting! Unhandled error:\n{e}")
+        finally:
+            self._connection.stop()
