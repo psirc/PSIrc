@@ -27,6 +27,7 @@ CMD_PARAMS = {
     Command.PRIVMSG: ["receiver", "trailing"],
     Command.PING: ["receiver"],
     Command.JOIN: ["channel"],
+    Command.CAP: ["param", "spec"]
 }
 
 CMD_MESSAGES = {

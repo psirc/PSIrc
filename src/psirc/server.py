@@ -2,7 +2,7 @@ import socket
 from concurrent.futures import ThreadPoolExecutor
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
-from psirc.message import Message, Prefix
+from psirc.message import Message, Prefix, Params
 from psirc.defines.responses import Command
 from psirc.identity_manager import IdentityManager
 from psirc.identity import IdentityType, Identity
@@ -25,46 +25,60 @@ class IRCServer:
         self.running = True
         self._connection.start()
 
-        while self.running:
-            result = self._connection.get_message()
-            if result is None:
-                continue
+        try:
+            while self.running:
+                result = self._connection.get_message()
+                if result is None:
+                    continue
 
-            client_socket, data = result
-            message = MessageParser.parse_message(data)
-            if not message:
-                logging.warning("Invalid message from client")
-                # server sends no response
-                continue
-            identity = self._identities.get_identity(client_socket)
-            message_params = (client_socket, identity, message)
+                client_socket, data = result
+                message = MessageParser.parse_message(data)
+                if not message:
+                    logging.warning("Invalid message from client")
+                    # server sends no response
+                    continue
+                identity = self._identities.get_identity(client_socket)
+                message_params = (client_socket, identity, message)
 
-            if self.try_handle_pass_command(*message_params):
-                continue
-            if not identity:
-                # None identity: client has not successfully send PASS command
-                # TODO : respond with error not registered
-                continue
+                # TEMPORARY, FOR CAP LS HANDLING, WILL BE MOVED TO SEPARATE FUNCTION
+                if message.command == Command.CAP and message.params:
+                    print(message.params["param"])
+                    response_params = Params({"param": "END"})
+                    response = Message(prefix=None, command=Command.CAP, params=response_params)
+                    print(f"crafted response to CAP: [{response}]")
+                    print(str(response).encode())
+                    client_socket.send(str(response).encode())
+                    continue
 
-            if self.try_handle_nick_command(*message_params):
-                continue
-            elif self.try_handle_user_command(*message_params):
-                continue
-            elif self.try_handle_server_command(*message_params):
-                continue
 
-            if not identity.registered():
-                # client didn't register NICK or didn't register as USER/SERVER
-                # TODO : respond with not registered
-                continue
+                if self.try_handle_pass_command(*message_params):
+                    continue
+                if not identity:
+                    # None identity: client has not successfully send PASS command
+                    # TODO : respond with error not registered
+                    continue
 
-            # client is registered
-            if self.try_handle_privmsg_command(*message_params):
-                continue
-            elif self.try_handle_join_command(*message_params):
-                continue
+                if self.try_handle_nick_command(*message_params):
+                    continue
+                elif self.try_handle_user_command(*message_params):
+                    continue
+                elif self.try_handle_server_command(*message_params):
+                    continue
 
-            # TODO : respond with unknown command error
+                if not identity.registered():
+                    # client didn't register NICK or didn't register as USER/SERVER
+                    # TODO : respond with not registered
+                    continue
+
+                # client is registered
+                if self.try_handle_privmsg_command(*message_params):
+                    continue
+                elif self.try_handle_join_command(*message_params):
+                    continue
+
+                # TODO : respond with unknown command error
+        except Exception as e:
+            print(e)
 
     def try_handle_pass_command(
         self, client_socket: socket.socket, identity: None | Identity, message: Message

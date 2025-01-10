@@ -46,6 +46,8 @@ class Command(Enum):
     PRIVMSG = 1007
     PING = 1008
 
+    CAP = 2000
+
     def __str__(self) -> str:
         return str(self.value) if self.value < 1000 else self.name
 
