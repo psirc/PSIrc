@@ -13,7 +13,8 @@ class RoutingManager:
 
     @staticmethod
     def send_to_user(receiver_nick: str, message: Message, session_manager: SessionManager) -> None:
-        # for now only sends to local
+        # for now only sends to local()
+        print(session_manager)
         receiver_socket = session_manager.get_user_socket(receiver_nick)
         if not receiver_socket:
             raise KeyError("Receiver not found")
