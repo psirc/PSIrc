@@ -67,7 +67,6 @@ class ConnectionManager:
             try:
                 data = client_socket.recv(4096)
                 data_list = data.decode().splitlines(True)
-                print(f"data: {data_list}")
                 for data in data_list:
                     if data:
                         self._queue.put((client_socket, data))

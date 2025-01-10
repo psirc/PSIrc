@@ -60,7 +60,7 @@ class IRCServer:
                     "message": message,
                     "nickname": self.nickname,
                     "connection_manager": self._connection,
-                    "password_handler": self._password_handler
+                    "password_handler": self._password_handler,
                     "channel_manager": self._channels,
                 }
 

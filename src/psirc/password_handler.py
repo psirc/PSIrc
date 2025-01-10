@@ -20,7 +20,7 @@ class PasswordHandler():
     def _valid_password(self, address: str, password: str) -> bool:
         return not self._passwords['I'][address] or self._passwords['I'][address] == password
 
-    def valid_address(self, address: str, password: str) -> bool:
+    def valid_password(self, address: str, password: str) -> bool:
         hostname, address = address.split('@')
         addr_list = address.split('.')
 
