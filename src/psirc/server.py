@@ -44,16 +44,6 @@ class IRCServer:
                     continue
                 identity = self._identities.get_identity(client_socket)
 
-                # TEMPORARY, FOR CAP LS HANDLING, WILL BE MOVED TO SEPARATE FUNCTION
-                if message.command == Command.CAP and message.params:
-                    print(message.params["param"])
-                    response_params = Params({"param": "END"})
-                    response = Message(prefix=None, command=Command.CAP, params=response_params)
-                    print(f"crafted response to CAP: [{response}]")
-                    print(str(response).encode())
-                    client_socket.send(str(response).encode())
-                    continue
-
                 cmd_args = {
                     "identity_manager": self._identities,
                     "session_manager": self._sockets,

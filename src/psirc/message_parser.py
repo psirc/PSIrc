@@ -28,7 +28,6 @@ class MessageParser:
             return Prefix(sender) if IRCValidator.validate_host(sender) else None
 
         nick, user, host = match.group("nick", "user", "host")
-        print(nick)
 
         if all(
             (

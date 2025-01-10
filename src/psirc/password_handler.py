@@ -28,10 +28,13 @@ class PasswordHandler():
             password_hostname, password_addr = password_address_full.split('@')
             valid_parts = 0
             passwd_addr_list = password_addr.split('.')
-            if len(addr_list) != len(passwd_addr_list):
-                continue
             for idx, passwd_addr_element in enumerate(passwd_addr_list):
-                if passwd_addr_element == '*' or addr_list[idx] == passwd_addr_element:
+                if idx > len(addr_list) - 1:
+                    break
+                if passwd_addr_element == '*':
+                    valid_parts = len(passwd_addr_list)
+                    break
+                elif addr_list[idx] == passwd_addr_element:
                     valid_parts += 1
                     continue
                 break
