@@ -5,23 +5,26 @@ from psirc.message import Message, Params
 from psirc.defines.responses import Command
 from psirc.identity_manager import IdentityManager
 from psirc.session_manager import SessionManager
+from psirc.password_handler import PasswordHandler
 import psirc.command_manager as cmd_manager
 
 import logging
 
 
 class IRCServer:
-    def __init__(self, nickname: str, host: str, port: int, password: str | None = None, max_workers: int = 10) -> None:
+    def __init__(self, nickname: str, host: str, port: int, max_workers: int = 10, *, password_file: str = "psirc.conf") -> None:
         self.running = False
         self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
         self._connection = ConnectionManager(host, port, self._thread_executor)
         self._sockets = SessionManager()
         self._identities = IdentityManager()
+        self._password_handler = PasswordHandler(password_file)
 
     def start(self) -> None:
         self.running = True
         self._connection.start()
+        self._password_handler.parse_config()
 
         try:
             while self.running:
@@ -54,7 +57,8 @@ class IRCServer:
                     "identity": identity,
                     "message": message,
                     "nickname": self.nickname,
-                    "connection_manager": self._connection
+                    "connection_manager": self._connection,
+                    "password_handlre": self._password_handler
                 }
 
                 if message.command not in cmd_manager.CMD_FUNCTIONS.keys():
