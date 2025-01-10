@@ -12,6 +12,7 @@ from psirc.identity import IdentityType, Identity
 from psirc.session_manager import SessionManager
 from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
+from psirc.channel_manager import ChannelManager
 
 
 class CmdArgs(TypedDict):
@@ -24,9 +25,7 @@ class CmdArgs(TypedDict):
     connection_manager: ConnectionManager
 
 
-def try_handle_quit_command(
-        **kwargs: Unpack[CmdArgs]
-) -> bool:
+def try_handle_quit_command(**kwargs: Unpack[CmdArgs]) -> bool:
     '''Try to handle QUIT command.
 
     Command: QUIT
@@ -70,9 +69,7 @@ def try_handle_quit_command(
     return True
 
 
-def try_handle_pass_command(
-        **kwargs: Unpack[CmdArgs]
-) -> bool:
+def try_handle_pass_command(**kwargs: Unpack[CmdArgs]) -> bool:
     '''Try to handle PASS command.
 
     Command: PASS
@@ -207,10 +204,10 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
         logging.info(f"Registered: {identity}")
 
         response = Message(
-                prefix=None,
-                command=Command.RPL_WELCOME,
-                params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname)
-            )
+            prefix=None,
+            command=Command.RPL_WELCOME,
+            params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname),
+        )
         print(f"welcome packet: [{str(response)}]")
         RoutingManager.respond_client(client_socket, response)
         # now that the three commands needed for registrations are present
@@ -284,22 +281,49 @@ def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
-    response = Message(
-            prefix=None,
-            command=Command.PONG,
-            params=parametrize(Command.PONG, receivedby=receiver)
-    )
+    response = Message(prefix=None, command=Command.PONG, params=parametrize(Command.PONG, receivedby=receiver))
     client_socket.send(str(response).encode())
     return True
 
 
-CMD_FUNCTIONS = {
-        Command.PASS: try_handle_pass_command,
-        Command.NICK: try_handle_nick_command,
-        Command.USER: try_handle_user_command,
-        Command.SERVER: try_handle_server_command,
-        Command.PRIVMSG: try_handle_privmsg_command,
-        Command.QUIT: try_handle_quit_command,
-        Command.PING: try_handle_ping_command
-}
+def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
+    identity = kwargs["identity"]
+    message = kwargs["message"]
+    session_manager = ["session_manager"]
+    channel_manager = kwargs["channel_manager"]
+    channel_name = message.params["channel"]
 
+    # TODO handling banned users, and key protected channels + handle channel topic
+    channel_manager.join(channel_name, identity.nickname)
+    topic_rpl = Message(
+        prefix=None,
+        command=Command.RPL_TOPIC,
+        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing="No topic yet"),
+    )
+    print(topic_rpl)
+
+    # handle better namereply
+    names = channel_manager.get_names(channel_name)
+
+    nam_rpl = Message(
+        prefix=None,
+        command=Command.RPL_NAMREPLY,
+        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing=names),
+    )
+    print(nam_rpl)
+
+    print(nam_rpl + names)
+
+    RoutingManager.send_to_user(identity.nickname, topic_rpl + names, session_manager)
+
+
+CMD_FUNCTIONS = {
+    Command.PASS: try_handle_pass_command,
+    Command.NICK: try_handle_nick_command,
+    Command.USER: try_handle_user_command,
+    Command.SERVER: try_handle_server_command,
+    Command.PRIVMSG: try_handle_privmsg_command,
+    Command.QUIT: try_handle_quit_command,
+    Command.PING: try_handle_ping_command,
+    Command.JOIN: try_handle_join_command,
+}

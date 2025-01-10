@@ -1,21 +1,21 @@
+import logging
 from psirc.defines.exceptions import NoSuchChannel
 from psirc.channel import Channel
 from psirc.message import Message
-from psirc.message_sender import MessageSender
+from psirc.routing_manager import RoutingManager
+from psirc.session_manager import SessionManager
 
 
 class ChannelManager:
     """Class managing channels, and handling channel operations
     attributes:
         channels - dict[string, Channel], dict of existing channels
-        message_sender - MessageSender, instance to handle sending messages
     """
 
-    def __init__(self, message_sender: MessageSender) -> None:
+    def __init__(self) -> None:
         self.channels: dict[str, Channel] = {}
-        self.message_sender = message_sender
 
-    def forward_message(self, channel_name: str, message: Message) -> None:
+    def forward_message(self, session_manager: SessionManager, channel_name: str, message: Message) -> None:
         """Delegate PRIVMSG handling to the channel
 
         :param channel_name: name of the channet to which the message is sent
@@ -27,7 +27,7 @@ class ChannelManager:
         :rtype: None
         """
         channel = self.get_channel(channel_name)
-        channel.forward_message(self.message_sender, message)
+        RoutingManager.send_to_channel(channel, message, session_manager)
 
     def join(self, channel_name: str, nickname: str, key: str = "") -> None:
         """Handle/delegate JOIN - join the channel
@@ -46,6 +46,7 @@ class ChannelManager:
             channel = self.get_channel(channel_name)
             channel.join(nickname, key)
         except NoSuchChannel:
+            logging.info(f"NoSuchChanel: {channel_name}, creating...")
             self._create_channel(channel_name, nickname)
 
     def kick(self, channel_name: str, nickname: str, kicked_nick: str) -> None:
@@ -64,6 +65,10 @@ class ChannelManager:
         """
         channel = self.get_channel(channel_name)
         channel.kick(nickname, kicked_nick)
+
+    def get_names(self, channel_name: str) -> str:
+        channel = self.get_channel(channel_name)
+        return channel.names()
 
     def get_channel(self, channel_name: str) -> Channel:
         """Get Channel with name

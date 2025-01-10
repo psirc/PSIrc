@@ -1,5 +1,5 @@
+import logging
 from psirc.defines.exceptions import BannedFromChannel, BadChannelKey, NotOnChannel, ChanopPrivIsNeeded
-from psirc.message import Message
 
 
 class Channel:
@@ -40,6 +40,7 @@ class Channel:
         if key != self.key:
             raise BadChannelKey
 
+        logging.info(f"{self.name}:{nickname} joined the channel")
         self.users.append(nickname)
 
     def kick(self, nickname: str, kicked_nick: str) -> None:
@@ -77,6 +78,5 @@ class Channel:
         if nickname in self.chanops:
             self.chanops.remove(nickname)
 
-    def forward_message(self, message_sender: MessageSender, message: Message) -> None:
-        for nickname in self.users:
-            message_sender.send_message(nickname, message)
+    def names(self) -> str:
+        return " ".join((("@" + nickname if nickname in self.chanops else "+" + nickname) for nickname in self.users))

@@ -18,6 +18,8 @@ class Command(Enum):
     RPL_WHOISIDLE = 317
     RPL_ENDOFWHOIS = 318
     RPL_WHOISCHANNELS = 319
+    RPL_TOPIC = 332
+    RPL_NAMREPLY = 353
 
     # Error responses
     ERR_NOSUCHNICK = 401

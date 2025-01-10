@@ -6,6 +6,7 @@ from psirc.defines.responses import Command
 from psirc.identity_manager import IdentityManager
 from psirc.session_manager import SessionManager
 from psirc.password_handler import PasswordHandler
+from psirc.channel_manager import ChannelManager
 import psirc.command_manager as cmd_manager
 
 import logging
@@ -20,6 +21,7 @@ class IRCServer:
         self._sockets = SessionManager()
         self._identities = IdentityManager()
         self._password_handler = PasswordHandler(password_file)
+        self._channels = ChannelManager()
 
     def start(self) -> None:
         self.running = True
@@ -58,7 +60,8 @@ class IRCServer:
                     "message": message,
                     "nickname": self.nickname,
                     "connection_manager": self._connection,
-                    "password_handlre": self._password_handler
+                    "password_handler": self._password_handler
+                    "channel_manager": self._channels,
                 }
 
                 if message.command not in cmd_manager.CMD_FUNCTIONS.keys():
