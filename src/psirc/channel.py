@@ -1,6 +1,5 @@
 from psirc.defines.exceptions import BannedFromChannel, BadChannelKey, NotOnChannel
 from psirc.message import Message
-from psirc.message_sender import MessageSender
 
 
 class Channel:
@@ -57,7 +56,3 @@ class Channel:
             raise NotOnChannel(f"user with nick: {nickname} is not on channel: {self.name}")
 
         self.users.remove(nickname)
-
-    def forward_message(self, message_sender: MessageSender, message: Message) -> None:
-        for nickname in self.users:
-            message_sender.send_message(nickname, message)
