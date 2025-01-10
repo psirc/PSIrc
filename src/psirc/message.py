@@ -41,10 +41,10 @@ class Prefix:
 # TODO: find a way to better represent params in code
 class Params:
     def __init__(self, params: dict[str, str] | None = None) -> None:
-        self.params = params if params else []
+        self.params = params if params else {}
 
     def __str__(self) -> str:
-        return " ".join(":" if value == "trailing" else "" + value for value in self.params.values() if value)
+        return " ".join((":" if key == "trailing" else "") + self[key] for key in self.params.keys() if self[key])
 
     def __getitem__(self, key: str) -> str:
         return self.params[key]

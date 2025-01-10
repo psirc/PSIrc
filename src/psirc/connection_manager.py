@@ -66,12 +66,14 @@ class ConnectionManager:
         while self._running:
             try:
                 data = client_socket.recv(4096)
-                print(f"data: {data}")
-                if data:
-                    self._queue.put((client_socket, data.decode()))
-                    continue
-                # TODO: handle disconnecting (send info downstream)
-                break
+                data_list = data.decode().split("\r\n")
+                print(f"data: {data_list}")
+                for data in data_list:
+                    if data:
+                        self._queue.put((client_socket, data))
+                        continue
+                    # TODO: handle disconnecting (send info downstream)
+                #break
 
             except UnicodeError:
                 logging.warning("ConnectionManager: " + f"Message from {client_address} was not valid unicode")
