@@ -1,24 +1,21 @@
 import socket
 from concurrent.futures import ThreadPoolExecutor
-from connection_manager import ConnectionManager
-from message_parser import MessageParser
-from message import Message
-from defines.commands import IRCCommand
-from identity_manager import IdentityManager
-from identity import IdentityType, Identity
-from session_manager import SessionManager
+from psirc.connection_manager import ConnectionManager
+from psirc.message_parser import MessageParser
+from psirc.message import Message, Prefix
+from psirc.defines.responses import Command
+from psirc.identity_manager import IdentityManager
+from psirc.identity import IdentityType, Identity
+from psirc.session_manager import SessionManager
+from psirc.response_params import parametrize
 
 import logging
 
 
 class IRCServer:
-    def __init__(
-            self,
-            nick: str, host: str, port: int,
-            max_workers: int = 10
-    ) -> None:
+    def __init__(self, nickname: str, host: str, port: int, max_workers: int = 10) -> None:
         self.running = False
-        self.nick = nick
+        self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
         self._connection = ConnectionManager(host, port, self._thread_executor)
         self._sockets = SessionManager()
@@ -29,7 +26,11 @@ class IRCServer:
         self._connection.start()
 
         while self.running:
-            client_socket, data = self._connection.get_message()
+            result = self._connection.get_message()
+            if result is None:
+                continue
+
+            client_socket, data = result
             message = MessageParser.parse_message(data)
             if not message:
                 logging.warning("Invalid message from client")
@@ -58,14 +59,12 @@ class IRCServer:
                 continue
 
             # client is registered
-            if self.try_handle_privmsg_command(client_socket, identity, message):
+            if self.try_handle_privmsg_command(*message_params):
                 continue
-            elif self.try_handle_join_command(client_socket, identity, message):
+            elif self.try_handle_join_command(*message_params):
                 continue
 
             # TODO : respond with unknown command error
-            
-
 
     def try_handle_pass_command(
             self,
@@ -94,16 +93,16 @@ class IRCServer:
         :rtype: ``bool``
         """
         '''
-        if message.command is not IRCCommand.PASS:
+        if message.command is not Command.PASS:
             return False
         if identity is not None:
             # already registered
             # TODO : respond with already registered error
             pass
         else:
-            # TODO: check for password
-            logging.info("New client registered")
-            self._identities.add(client_socket)
+            # TODO: check for password -> password is checked later - now just connect it to identity
+            logging.info("Set PASS")
+            self._identities.add(client_socket, message.params["password"])
             # OK, no response to client
         return True
 
@@ -132,10 +131,10 @@ class IRCServer:
         :return: True if message command is NICK, False otherwise
         :rtype: ``bool``
         '''
-        if message.command is not IRCCommand.NICK:
+        if message.command is not Command.NICK:
             return False
         # TODO : check for nick collisions
-        identity.nick = message.params
+        identity.nickname = message.params["nickname"]
         # QUESTION : Do we want to handle nick change functionality
         return True
 
@@ -165,7 +164,7 @@ class IRCServer:
         :return: True if message command is NICK, False otherwise
         :rtype: ``bool``
         '''
-        if message.command is not IRCCommand.USER:
+        if message.command is not Command.USER:
             return False
         if identity.registered():
             if identity.type is IdentityType.SERVER:
@@ -173,7 +172,7 @@ class IRCServer:
                 # TODO : handle new user registration from server
                 pass
             else:
-                # Local user already registered
+                # Local user who is already registered
                 # TODO : respond with already registered error
                 pass
         elif not identity.nick:
@@ -181,9 +180,14 @@ class IRCServer:
             # TODO : respond with error not registered
             pass
         else:
-            # TODO : parse user command
             identity.type = IdentityType.USER
-            self._sockets.add_user(identity.nick, client_socket)
+            identity.username = message.params["username"]
+            identity.realname = message.params["realname"]
+            self._sockets.add_user(identity.nickname, client_socket)
+            logging.info(f"Registered: {identity}")
+            # now that the three commands needed for registrations are present
+            # server can verify user, and register user /
+            # TODO: check user
         return True
 
     def try_handle_server_command(
@@ -192,7 +196,7 @@ class IRCServer:
             identity: Identity,
             message: Message
     ) -> bool:
-        if message.command is not IRCCommand.SERVER:
+        if message.command is not Command.SERVER:
             return False
         # TODO : handle server registration
         return True
@@ -203,9 +207,33 @@ class IRCServer:
             identity: Identity,
             message: Message
     ) -> bool:
-        if message.command is not IRCCommand.PRIVMSG:
+        if message.command is not Command.PRIVMSG:
             return False
-        # TODO : implement private messaging
+        
+        message.prefix = Prefix(identity.nickname, identity.username, self.nickname)
+        receiver = message.params["receiver"]
+        message_to_send = message
+
+        receiver_socket = self._sockets.get_user_socket(receiver)
+        if receiver_socket:
+            logging.info(f"Forwarding private message: {message}")
+            receiver_socket.send(str(message_to_send).encode())
+            return True
+
+        if not receiver:
+            message_to_send = Message(
+                prefix=None,
+                command=Command.ERR_NONICKNAMEGIVEN,
+                params=parametrize(Command.ERR_NONICKNAMEGIVEN),
+            )
+        else:
+            message_to_send = Message(
+                prefix=None,
+                command=Command.ERR_NOSUCHNICK,
+                params=parametrize(Command.ERR_NOSUCHNICK, nickname=receiver),
+            )
+        logging.warning(f"Sending ERR: {message}")
+        client_socket.send(str(message_to_send).encode())
         return True
 
     def try_handle_join_command(
@@ -214,7 +242,7 @@ class IRCServer:
             identity: Identity,
             message: Message
     ) -> bool:
-        if message.command is not IRCCommand.JOIN:
+        if message.command is not Command.JOIN:
             return False
         # TODO : implement joining rooms
         return True

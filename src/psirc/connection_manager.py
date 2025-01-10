@@ -17,19 +17,17 @@ class ConnectionManager:
         _queue - Queue - queue of messages received from connected sockets,
         _connection - set - set of connected sockets
     """
-    def __init__(
-            self,
-            host: str, port: int,
-            thread_pool: ThreadPoolExecutor
-    ) -> None:
+
+    def __init__(self, host: str, port: int, thread_pool: ThreadPoolExecutor) -> None:
         self.host = host
         self.port = port
         self.executor = thread_pool
         self._running = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.bind((self._host, self._port))
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._socket.bind((self.host, self.port))
         self._queue: Queue[tuple[socket.socket, str]] = Queue()
-        self._connections: set[socket.socket] = {}
+        self._connections: set[socket.socket] = set()
 
     def start(self) -> None:
         """Start thread accepting connections.
@@ -41,7 +39,7 @@ class ConnectionManager:
         self._socket.listen()
         self._running = True
 
-        self._executor.submit(self._accept_connections)
+        self.executor.submit(self._accept_connections)
 
     def disconnect_client(self, client_socket: socket.socket) -> None:
         if client_socket in self._connections:
@@ -51,31 +49,24 @@ class ConnectionManager:
     def _accept_connections(self) -> None:
         while self._running:
             try:
-                logging.info(
-                    "ConnectionManager: waiting for connection..."
-                )
+                logging.info("ConnectionManager: waiting for connection...")
                 client_socket, client_address = self._socket.accept()
-                logging.info(
-                    f"ConnectionManager: Connected with {client_address}"
-                )
+                logging.info(f"ConnectionManager: Connected with {client_address}")
                 self._connections.add(client_socket)
 
-                self._executor.submit(
-                    self._handle_client,
-                    client_socket, client_address
-                )
+                self.executor.submit(self._handle_connection, client_socket, client_address)
             except socket.error as e:
                 if not self._running:
                     break
                 logging.warning(f"ConnectionManager: server socket error: {e}")
+            except Exception as e:
+                print(f"exception: {e}")
 
-    def _handle_connection(
-            self,
-            client_socket: socket.socket, client_address: str
-    ) -> None:
+    def _handle_connection(self, client_socket: socket.socket, client_address: str) -> None:
         while self._running:
             try:
                 data = client_socket.recv(4096)
+                print(f"data: {data}")
                 if data:
                     self._queue.put((client_socket, data.decode()))
                     continue
@@ -83,24 +74,18 @@ class ConnectionManager:
                 break
 
             except UnicodeError:
-                logging.warning(
-                    "ConnectionManager: " +
-                    f"Message from {client_address} was not valid unicode"
-                )
+                logging.warning("ConnectionManager: " + f"Message from {client_address} was not valid unicode")
 
             except OSError as e:
                 if not self._running and client_socket in self._connections:
-                    logging.warning(
-                        "ConnectionManager: " +
-                        f"{client_address} socket error: {e}"
-                    )
+                    logging.warning("ConnectionManager: " + f"{client_address} socket error: {e}")
                 break
+            except Exception as e:
+                print(f"exception in handle connection {e}")
 
         self.disconnect_client(client_socket)
 
-    def get_message(
-            self, blocking: bool = True
-    ) -> tuple[socket.socket, str]:
+    def get_message(self, blocking: bool = True) -> tuple[socket.socket, str]:
         """Get received message from a connected socket.
 
         :param blocking: block until new message is available

@@ -14,14 +14,14 @@ class SessionManager:
     """
     Manages the sockets connected to current server, including user and server.
     """
+
     def __init__(self) -> None:
         self._users: dict[str, socket.socket] = {}
         self._servers: dict[str, socket.socket] = {}
         self._users_lock = threading.Lock()
         self._servers_lock = threading.Lock()
 
-    def add_user(
-            self, user_nick: str, user_socket: socket.socket) -> None:
+    def add_user(self, user_nick: str, user_socket: socket.socket) -> None:
         """
         Add user to the list of locally connected users
 
@@ -34,12 +34,11 @@ class SessionManager:
         :rtype: None
         """
         with self._users_lock:
-            if user_nick in self._users:
-                raise NickAlreadyInUse(f"Nick \"{user_nick}\" in use")
+            if user_nick in self._users.keys():
+                raise NickAlreadyInUse(f'Nick "{user_nick}" in use')
             self._users[user_nick] = user_socket
 
-    def add_server(
-            self, server_name: str, server_socket: socket.socket) -> None:
+    def add_server(self, server_name: str, server_socket: socket.socket) -> None:
         """
         Add server to the list of locally connected servers
 
@@ -53,7 +52,7 @@ class SessionManager:
         """
         with self._servers_lock:
             if server_name in self._servers:
-                raise NickAlreadyInUse(f"Server name \"{server_name}\" in use")
+                raise NickAlreadyInUse(f'Server name "{server_name}" in use')
             self._servers[server_name] = server_socket
 
     def get_user_socket(self, user_nick: str) -> socket.socket | None:
@@ -102,7 +101,7 @@ class SessionManager:
 
     def remove_user(self, user_nick: str) -> None:
         """
-        Remove user socket from 
+        Remove user socket from
 
         :param client_name: name of client
         :type client_name: ``str``
