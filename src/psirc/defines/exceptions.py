@@ -12,3 +12,7 @@ class NoSuchChannel(Exception):
 
 class NotOnChannel(Exception):
     pass
+
+
+class ChanopPrivIsNeeded(Exception):
+    pass

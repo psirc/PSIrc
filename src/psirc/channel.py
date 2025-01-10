@@ -1,4 +1,4 @@
-from psirc.defines.exceptions import BannedFromChannel, BadChannelKey, NotOnChannel
+from psirc.defines.exceptions import BannedFromChannel, BadChannelKey, NotOnChannel, ChanopPrivIsNeeded
 from psirc.message import Message
 
 
@@ -42,17 +42,28 @@ class Channel:
 
         self.users.append(nickname)
 
-    def kick(self, nickname: str) -> None:
+    def kick(self, nickname: str, kicked_nick: str) -> None:
         """Kick user from channel
 
-
-        :param nickname: nickname of user performing join operation
-        :type nickname: ``str``
+        :param nickname: nickname of user performing KICK operation
+        :type nickname: str
+        :param kicked_nick: nickname of user to be kicked
+        :type kicked_nick: ``str``
+        :raises: ChanopPrivIsNeeded
         :raises: NotOnChannel: if user with provided nick is not on channel
         :return: None
         :rtype: None
         """
-        if nickname not in self.users:
-            raise NotOnChannel(f"user with nick: {nickname} is not on channel: {self.name}")
+        if nickname not in self.chanops:
+            raise ChanopPrivIsNeeded(
+                f"Channel operator's privileges needed to perform KICK operation. {nickname} has no such privileges."
+            )
 
-        self.users.remove(nickname)
+        if kicked_nick not in self.users:
+            raise NotOnChannel(f"user with nick: {kicked_nick} is not on channel: {self.name}")
+
+        self.users.remove(kicked_nick)
+
+    def forward_message(self, message_sender: MessageSender, message: Message) -> None:
+        for nickname in self.users:
+            message_sender.send_message(nickname, message)
