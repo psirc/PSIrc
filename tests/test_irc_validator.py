@@ -75,3 +75,11 @@ def test_validate_nickname(nick, expected_result):
 )
 def test_validate_host(host, expected_result):
     assert IRCValidator.validate_host(host) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("channel", "expected_result"),
+    [("#channel", True), ("&correct23", True), ("!incorrect", False), ("#channel has spaces", False)],
+)
+def test_validate_channel(channel, expected_result):
+    assert IRCValidator.validate_channel(channel) == expected_result
