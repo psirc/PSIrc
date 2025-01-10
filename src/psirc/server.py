@@ -1,20 +1,17 @@
-import socket
 from concurrent.futures import ThreadPoolExecutor
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
-from psirc.message import Message, Prefix, Params
+from psirc.message import Message, Params
 from psirc.defines.responses import Command
 from psirc.identity_manager import IdentityManager
-from psirc.identity import IdentityType, Identity
 from psirc.session_manager import SessionManager
-from psirc.response_params import parametrize
 import psirc.command_manager as cmd_manager
 
 import logging
 
 
 class IRCServer:
-    def __init__(self, nickname: str, host: str, port: int, max_workers: int = 10) -> None:
+    def __init__(self, nickname: str, host: str, port: int, password: str | None = None, max_workers: int = 10) -> None:
         self.running = False
         self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
@@ -39,7 +36,6 @@ class IRCServer:
                     # server sends no response
                     continue
                 identity = self._identities.get_identity(client_socket)
-                message_params = (client_socket, identity, message)
 
                 # TEMPORARY, FOR CAP LS HANDLING, WILL BE MOVED TO SEPARATE FUNCTION
                 if message.command == Command.CAP and message.params:
@@ -57,7 +53,8 @@ class IRCServer:
                     "client_socket": client_socket,
                     "identity": identity,
                     "message": message,
-                    "nickname": self.nickname
+                    "nickname": self.nickname,
+                    "connection_manager": self._connection
                 }
 
                 cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)

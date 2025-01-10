@@ -20,6 +20,53 @@ class CmdArgs(TypedDict):
     identity: None | Identity
     message: Message
     nickname: str
+    connection_manager: ConnectionManager
+
+
+def try_handle_quit_command(
+        **kwargs: Unpack[CmdArgs]
+) -> bool:
+    '''Try to handle QUIT command.
+
+    Command: QUIT
+    Parameters: [<quit_message>]
+
+    A client session is ended with a quit message.  The server must close
+    the connection to a client which sends a QUIT message. If a "Quit
+    Message" is given, this will be sent instead of the default message,
+    the nickname.
+
+    :param client_socket: Socket from which message was received
+    :param type: ``socket``
+    :param identity: Identity associated with socket
+    :param type: ``Identity`` or ``None``
+    :param message: Parsed message received from socket
+    :param type: ``Message``
+    :return: True if message command is PASS, False otherwise
+    :rtype: ``bool``
+    """
+    '''
+
+    message = kwargs["message"]
+    client_socket = kwargs["client_socket"]
+    identity = kwargs["identity"]
+    session_manager = kwargs["session_manager"]
+    identity_manager = kwargs["identity_manager"]
+    connection_manager = kwargs["connection_manager"]
+
+    if message.command is not Command.QUIT:
+        return False
+    connection_manager.disconnect_client(client_socket)
+    if identity is None:
+        return True
+    identity_manager.remove(client_socket)
+    if identity.type is IdentityType.USER:
+        session_manager.remove_user(identity.nickname)
+        # TODO : notify remote servers
+    elif identity.type is IdentityType.SERVER:
+        # TODO : server removal functionality
+        pass
+    return True
 
 
 def try_handle_pass_command(
@@ -91,6 +138,9 @@ def try_handle_nick_command(**kwargs: Unpack[CmdArgs]) -> bool:
     message = kwargs["message"]
     identity = kwargs["identity"]
 
+    if not identity:
+        return False
+
     if message.command is not Command.NICK:
         return False
     # TODO : check for nick collisions
@@ -127,6 +177,9 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
     client_socket = kwargs["client_socket"]
     session_manager = kwargs["session_manager"]
 
+    if not identity:
+        return False
+
     if message.command is not Command.USER:
         return False
     if identity.registered():
@@ -144,8 +197,11 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
         pass
     else:
         identity.type = IdentityType.USER
-        identity.username = message.params["username"]
-        identity.realname = message.params["realname"]
+        if message.params:
+            identity.username = message.params["username"]
+            identity.realname = message.params["realname"]
+        else:
+            return False
         session_manager.add_user(identity.nickname, client_socket)
         logging.info(f"Registered: {identity}")
 
@@ -164,12 +220,14 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
 
 def try_handle_server_command(**kwargs: Unpack[CmdArgs]) -> bool:
     message = kwargs["message"]
+    identity = kwargs["identity"]
 
     if message.command is not Command.SERVER:
         return False
     # TODO : handle server registration
+    if not identity:
+        return False
     return True
-
 
 
 def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
@@ -182,8 +240,14 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     if message.command is not Command.PRIVMSG:
         return False
 
+    if not identity or not identity.registered():
+        return False
+
     message.prefix = Prefix(identity.nickname, identity.username, nickname)
-    receiver = message.params["receiver"]
+    if message.params:
+        receiver = message.params["receiver"]
+    else:
+        return False
     message_to_send = message
 
     receiver_socket = session_manager.get_user_socket(receiver)
@@ -215,5 +279,6 @@ CMD_FUNCTIONS = {
         Command.USER: try_handle_user_command,
         Command.SERVER: try_handle_server_command,
         Command.PRIVMSG: try_handle_privmsg_command,
+        Command.QUIT: try_handle_quit_command
 }
 

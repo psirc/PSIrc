@@ -46,6 +46,8 @@ class Command(Enum):
     PRIVMSG = 1007
     PING = 1008
 
+    QUIT = 1010
+
     CAP = 2000
 
     def __str__(self) -> str:
