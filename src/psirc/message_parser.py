@@ -7,9 +7,7 @@ from psirc.response_params import CMD_PARAMS, parametrize
 
 
 class MessageParser:
-    message_regex = (
-        r"^(:(?P<prefix>\S+)\s)?(?P<cmd>\S+)(\s(?P<params>.*?))?(?:\s:(?P<trail>.*))?$"
-    )
+    message_regex = r"^(:(?P<prefix>\S+)\s)?(?P<cmd>\S+)(\s(?P<params>.*?))?(?:\s:(?P<trail>.*))?$"
     prefix_regex = r"^(?P<nick>[^\s!.@]+)(!(?P<user>[^\s@!]+))?(@(?P<host>\S+))?$|^(?P<servername>\S+)$"
 
     @classmethod
@@ -97,10 +95,10 @@ class MessageParser:
         params_list = params.split()
         params_list.append(trail) if trail else None
 
-        print(f"PARAMS: {params_list}")
-        print(f"CMD_PARAMS: {CMD_PARAMS[command]}")
+        # print(f"PARAMS: {params_list}")
+        # print(f"CMD_PARAMS: {CMD_PARAMS[command]}")
         params_dict = {CMD_PARAMS[command][i]: param for i, param in enumerate(params_list)}
-        print(f"Params dict: {params_dict}")
+        # print(f"Params dict: {params_dict}")
         return parametrize(command, **params_dict)
 
     @classmethod
@@ -117,18 +115,15 @@ class MessageParser:
         if not match:
             print("Unable to match with message regex")
             return None
-        prefix, command, params, trailing = match.group(
-            "prefix", "cmd", "params", "trail"
-        )
-        print(prefix)
+        prefix, command, params, trailing = match.group("prefix", "cmd", "params", "trail")
         prefix = cls._parse_prefix(prefix) if prefix else None
         command = cls._valid_command(command)
         if not command:
             return None
 
         params = cls._parse_params(command, params, trailing)
-        print(prefix)
-        print(command)
-        print(params)
-        print(trailing)
+        # print(f"prefix: {prefix}")
+        # print(f"command: {command}")
+        # print(f"params: {params}")
+        # print(f"trailing: {trailing}")
         return Message(prefix=prefix, command=command, params=params)

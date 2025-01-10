@@ -29,16 +29,31 @@ class Prefix:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Prefix):
             return NotImplemented
-        return all((self.sender == other.sender, self.user == other.user, self.host == other.host))
+        return all(
+            (
+                self.sender == other.sender,
+                self.user == other.user,
+                self.host == other.host,
+            )
+        )
 
 
 # TODO: find a way to better represent params in code
 class Params:
-    def __init__(self, params: dict | None = None) -> None:
+    def __init__(self, params: dict[str, str] | None = None) -> None:
         self.params = params if params else []
 
     def __str__(self) -> str:
-        return " ".join(self.params)
+        return " ".join(":" if value == "trailing" else "" + value for value in self.params.values() if value)
+
+    def __getitem__(self, key: str) -> str:
+        return self.params[key]
+
+    def __setitem__(self, key: str, value: str) -> None:
+        self.params[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.params
 
 
 @dataclass(kw_only=True)
@@ -48,4 +63,5 @@ class Message:
     params: Params | None = field()
 
     def __str__(self) -> str:
-        return f"{self.prefix}{self.command} {self.params}\r\n"
+
+        return " ".join((str(x) for x in (self.prefix, self.command, self.params) if x is not None))
