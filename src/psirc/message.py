@@ -64,4 +64,4 @@ class Message:
 
     def __str__(self) -> str:
 
-        return " ".join((str(x) for x in (self.prefix, self.command, self.params) if x is not None))
+        return " ".join((str(x) for x in (self.prefix, self.command, self.params) if x)).strip()
