@@ -8,23 +8,25 @@ from psirc.message import Params
 from psirc.defines.responses import Command
 
 CMD_PARAMS = {
-    Command.RPL_AWAY: ["nick", "trailing"],
-    Command.RPL_WHOISUSER: ["nick", "user", "host", "real_name"],
-    Command.RPL_WHOISSERVER: ["nick", "server", "server_info"],
-    Command.RPL_WHOISOPERATOR: ["nick"],
-    Command.RPL_WHOISIDLE: ["nick", "seconds_idle"],
-    Command.RPL_ENDOFWHOIS: ["nick"],
-    Command.RPL_WHOISCHANNELS: ["nick", "channel"],
-    Command.ERR_NOSUCHNICK: ["nick"],
+    Command.RPL_AWAY: ["nickname", "trailing"],
+    Command.RPL_WHOISUSER: ["nickname", "user", "host", "real_name"],
+    Command.RPL_WHOISSERVER: ["nickname", "server", "server_info"],
+    Command.RPL_WHOISOPERATOR: ["nickname"],
+    Command.RPL_WHOISIDLE: ["nickname", "seconds_idle"],
+    Command.RPL_ENDOFWHOIS: ["nickname"],
+    Command.RPL_WHOISCHANNELS: ["nickname", "channel"],
+    Command.ERR_NOSUCHNICK: ["nickname"],
     Command.ERR_NOSUCHSERVER: ["server"],
     Command.ERR_CANNOTSENDTOCHAN: ["channel"],
     Command.ERR_TOOMANYCHANNELS: ["channel"],
-    Command.ERR_WASNOSUCHNICK: ["nick"],
+    Command.ERR_WASNOSUCHNICK: ["nickname"],
     Command.ERR_TOOMANYTARGETS: ["target"],
-    Command.NICK: ["nick"],
+    Command.PASS: ["password"],
+    Command.NICK: ["nickname"],
+    Command.USER: ["username", "hostname", "servername", "realname"],
     Command.PRIVMSG: ["receiver", "trailing"],
     Command.PING: ["receiver"],
-    Command.JOIN: ["channel"]
+    Command.JOIN: ["channel"],
 }
 
 CMD_MESSAGES = {
@@ -39,6 +41,7 @@ CMD_MESSAGES = {
     Command.ERR_TOOMANYCHANNELS: "You have joined too many channels",
     Command.ERR_WASNOSUCHNICK: "There was no such nickname",
     Command.ERR_TOOMANYTARGETS: "Duplicate recipients, No message delivered",
+    Command.ERR_NONICKNAMEGIVEN: "No nickname given",
     Command.ERR_NOORIGIN: "No origin specified",
     Command.ERR_NORECIPIENT: "No recipient given",
     Command.ERR_NOTEXTTOSEND: "No text to send",

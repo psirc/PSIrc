@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class Command(Enum):
+    RPL_WELCOME = 1
     RPL_NONE = 300
     RPL_USERHOST = 302
 
@@ -30,6 +31,9 @@ class Command(Enum):
     ERR_NORECIPIENT = 411
     ERR_NOTEXTTOSEND = 412
 
+    ERR_NONICKNAMEGIVEN = 431
+    ERR_NOTREGISTERED = 451
+
     # Responses greater than 1000
     # Representing text commands
     PASS = 1000
@@ -41,6 +45,9 @@ class Command(Enum):
     JOIN = 1005
     PRIVMSG = 1007
     PING = 1008
+
+    def __str__(self) -> str:
+        return str(self.value) if self.value < 1000 else self.name
 
 
 # TODO: fill up the list
