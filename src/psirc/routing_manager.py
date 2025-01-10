@@ -23,8 +23,9 @@ class RoutingManager:
         return
 
     @staticmethod
-    def send_to_channel(channel: Channel, message: Message, session_manager: SessionManager) -> None:
+    def send_to_channel(channel: Channel, nickname: str, message: Message, session_manager: SessionManager) -> None:
         # for now only sends to local
         encoded_message = str(message).encode()
-        for nickname in channel.users:
-            session_manager.get_user_socket(nickname).send(encoded_message)
+        for nick in channel.users:
+            if nick != nickname:
+                session_manager.get_user_socket(nick).send(encoded_message)

@@ -15,7 +15,9 @@ class ChannelManager:
     def __init__(self) -> None:
         self.channels: dict[str, Channel] = {}
 
-    def forward_message(self, session_manager: SessionManager, channel_name: str, message: Message) -> None:
+    def forward_message(
+        self, session_manager: SessionManager, nickname: str, channel_name: str, message: Message
+    ) -> None:
         """Delegate PRIVMSG handling to the channel
 
         :param channel_name: name of the channet to which the message is sent
@@ -27,7 +29,7 @@ class ChannelManager:
         :rtype: None
         """
         channel = self.get_channel(channel_name)
-        RoutingManager.send_to_channel(channel, message, session_manager)
+        RoutingManager.send_to_channel(channel, nickname, message, session_manager)
 
     def join(self, channel_name: str, nickname: str, key: str = "") -> None:
         """Handle/delegate JOIN - join the channel

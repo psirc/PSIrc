@@ -19,6 +19,7 @@ CMD_PARAMS = {
     Command.RPL_TOPIC: ["channel", "trailing"],
     Command.RPL_NAMREPLY: ["channel", "trailing"],
     Command.ERR_NOSUCHNICK: ["nickname"],
+    Command.ERR_NOSUCHCHANNEL: ["channel"],
     Command.ERR_NOSUCHSERVER: ["server"],
     Command.ERR_CANNOTSENDTOCHAN: ["channel"],
     Command.ERR_TOOMANYCHANNELS: ["channel"],

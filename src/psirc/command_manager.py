@@ -14,6 +14,8 @@ from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
 from psirc.channel_manager import ChannelManager
 from psirc.password_handler import PasswordHandler
+from psirc.irc_validator import IRCValidator
+from psirc.defines.exceptions import NoSuchChannel
 
 
 class CmdArgs(TypedDict):
@@ -256,6 +258,7 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     identity = kwargs["identity"]
     nickname = kwargs["nickname"]
     session_manager = kwargs["session_manager"]
+    channel_manager: ChannelManager = kwargs["channel_manager"]
     client_socket = kwargs["client_socket"]
 
     if message.command is not Command.PRIVMSG:
@@ -282,7 +285,14 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     message_to_send = message
 
     try:
-        RoutingManager.send_to_user(receiver, message_to_send, session_manager)
+        if IRCValidator.validate_channel(receiver):
+            channel_manager.forward_message(session_manager, identity.nickname, receiver, message_to_send)
+        else:
+            RoutingManager.send_to_user(receiver, message_to_send, session_manager)
+    except NoSuchChannel:
+        pass
+        # TODO
+        # message_error = Message(prefix=None, command=Command.ERR_NOSUCHCHANNEL, params=)
     except KeyError:
         message_error = Message(
             prefix=None,
