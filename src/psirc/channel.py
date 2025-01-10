@@ -49,7 +49,7 @@ class Channel:
         :type nickname: str
         :param kicked_nick: nickname of user to be kicked
         :type kicked_nick: ``str``
-        :raises: ChanopPrivIsNeeded
+        :raises: ChanopPrivIsNeeded: if user trying to perform operation does not have needed privileges
         :raises: NotOnChannel: if user with provided nick is not on channel
         :return: None
         :rtype: None
@@ -59,10 +59,23 @@ class Channel:
                 f"Channel operator's privileges needed to perform KICK operation. {nickname} has no such privileges."
             )
 
-        if kicked_nick not in self.users:
-            raise NotOnChannel(f"user with nick: {kicked_nick} is not on channel: {self.name}")
+        self.part(kicked_nick)
 
-        self.users.remove(kicked_nick)
+    def part(self, nickname: str) -> None:
+        """Part from channel
+
+        :param nickname: nickname of user departing from channel
+        :type nickname: str
+        :raises: NotOnChannel: if user with provided nick is not on channel
+        :return: None
+        :rtype: None
+        """
+        if nickname not in self.users:
+            raise NotOnChannel(f"user with nick: {nickname} is not on channel: {self.name}")
+
+        self.users.remove(nickname)
+        if nickname in self.chanops:
+            self.chanops.remove(nickname)
 
     def forward_message(self, message_sender: MessageSender, message: Message) -> None:
         for nickname in self.users:
