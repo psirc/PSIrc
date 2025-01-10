@@ -13,7 +13,7 @@ import logging
 
 
 class IRCServer:
-    def __init__(self, nickname: str, host: str, port: int, max_workers: int = 10) -> None:
+    def __init__(self, nickname: str, host: str, port: int, password: str = None, max_workers: int = 10) -> None:
         self.running = False
         self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
@@ -50,7 +50,8 @@ class IRCServer:
                     client_socket.send(str(response).encode())
                     continue
 
-
+                if self.try_handle_quit_command(*message_params):
+                    continue
                 if self.try_handle_pass_command(*message_params):
                     continue
                 if not identity:
@@ -79,6 +80,43 @@ class IRCServer:
                 # TODO : respond with unknown command error
         except Exception as e:
             print(e)
+
+    def try_handle_quit_command(
+        self, client_socket: socket.socket, identity: None | Identity, message: Message
+    ) -> bool:
+        '''Try to handle QUIT command.
+
+        Command: QUIT
+        Parameters: [<quit_message>]
+
+        A client session is ended with a quit message.  The server must close
+        the connection to a client which sends a QUIT message. If a "Quit
+        Message" is given, this will be sent instead of the default message,
+        the nickname.
+
+        :param client_socket: Socket from which message was received
+        :param type: ``socket``
+        :param identity: Identity associated with socket
+        :param type: ``Identity`` or ``None``
+        :param message: Parsed message received from socket
+        :param type: ``Message``
+        :return: True if message command is PASS, False otherwise
+        :rtype: ``bool``
+        """
+        '''
+        if message.command is not Command.QUIT:
+            return False
+        self._connection.disconnect_client(client_socket)
+        if identity is None:
+            return True
+        self._identities.remove(client_socket)
+        if identity.type is IdentityType.USER:
+            self._sockets.remove_user(identity.nickname)
+            # TODO : notify remote servers
+        elif identity.type is IdentityType.SERVER:
+            # TODO : server removal functionality
+            pass
+        return True
 
     def try_handle_pass_command(
         self, client_socket: socket.socket, identity: None | Identity, message: Message
