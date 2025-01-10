@@ -26,7 +26,8 @@ CMD_PARAMS = {
     Command.NICK: ["nickname"],
     Command.USER: ["username", "hostname", "servername", "realname"],
     Command.PRIVMSG: ["receiver", "trailing"],
-    Command.PING: ["trailing"],
+    Command.PING: ["receiver"],
+    Command.PONG: ["receivedby"],
     Command.JOIN: ["channel"],
     Command.CAP: ["param", "spec"]
 }

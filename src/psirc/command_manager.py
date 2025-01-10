@@ -278,14 +278,20 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
 def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
     identity = kwargs["identity"]
     message = kwargs["message"]
+    client_socket = kwargs["client_socket"]
 
     if not identity or not identity.registered():
         return False
 
-    if message.params:
-        receiver = message.params["receiver"]  # this is us
-    
-    ...
+    receiver = message.params["receiver"] if message.params else ""  # this is us
+
+    response = Message(
+            prefix=None,
+            command=Command.PONG,
+            params=parametrize(Command.PONG, receivedby=receiver)
+    )
+    client_socket.send(str(response).encode())
+    return True
 
 
 CMD_FUNCTIONS = {
@@ -294,6 +300,7 @@ CMD_FUNCTIONS = {
         Command.USER: try_handle_user_command,
         Command.SERVER: try_handle_server_command,
         Command.PRIVMSG: try_handle_privmsg_command,
-        Command.QUIT: try_handle_quit_command
+        Command.QUIT: try_handle_quit_command,
+        Command.PING: try_handle_ping_command
 }
 
