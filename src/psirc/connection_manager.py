@@ -73,7 +73,7 @@ class ConnectionManager:
                         self._queue.put((client_socket, data))
                         continue
                     # TODO: handle disconnecting (send info downstream)
-                break
+                #break
 
             except UnicodeError:
                 logging.warning("ConnectionManager: " + f"Message from {client_address} was not valid unicode")

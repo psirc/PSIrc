@@ -186,6 +186,14 @@ class IRCServer:
             identity.realname = message.params["realname"]
             self._sockets.add_user(identity.nickname, client_socket)
             logging.info(f"Registered: {identity}")
+
+            response = Message(
+                    prefix=None,
+                    command=Command.PING,
+                    params=parametrize(Command.PING, trailing="A1B2C3D4")
+                )
+            print("ping: ", str(response))
+            client_socket.send(str(response).encode())
             # now that the three commands needed for registrations are present
             # server can verify user, and register user /
             # TODO: check user
