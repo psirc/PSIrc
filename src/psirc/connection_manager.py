@@ -1,7 +1,7 @@
 import socket
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from queue import Queue
+from queue import Queue, Empty
 
 
 class ConnectionManager:
@@ -67,11 +67,13 @@ class ConnectionManager:
             try:
                 data = client_socket.recv(4096)
                 data_list = data.decode().split("\r\n")
+                print(f"data: {data_list}")
                 for data in data_list:
                     if data:
                         self._queue.put((client_socket, data))
                         continue
                     # TODO: handle disconnecting (send info downstream)
+                #break
 
             except UnicodeError:
                 logging.warning("ConnectionManager: " + f"Message from {client_address} was not valid unicode")
@@ -85,7 +87,7 @@ class ConnectionManager:
 
         self.disconnect_client(client_socket)
 
-    def get_message(self, blocking: bool = True) -> tuple[socket.socket, str]:
+    def get_message(self, blocking: bool = True, timeout: float | None = None) -> tuple[socket.socket, str]:
         """Get received message from a connected socket.
 
         :param blocking: block until new message is available
@@ -93,7 +95,10 @@ class ConnectionManager:
         :return: Socket and data received from said socket
         :rtype: ``Tuple[socket.socket, str]``
         """
-        return self._queue.get(blocking)
+        try:
+            return self._queue.get(blocking, timeout=timeout)
+        except Empty:
+            return None
 
     def stop(self) -> None:
         """Close server socket and connected sockets.

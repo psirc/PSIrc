@@ -25,7 +25,7 @@ class IRCServer:
 
         try:
             while self.running:
-                result = self._connection.get_message()
+                result = self._connection.get_message(timeout=1)
                 if result is None:
                     continue
 
@@ -62,7 +62,10 @@ class IRCServer:
                 try:
                     cmd_manager.CMD_FUNCTIONS[message.command](**cmd_args)
                 except KeyError:
-                    logging.error(f"Unrecognized command: {message.command}.")
-
+                    logging.warning(f"Unrecognized command: {message.command}.")
+        except KeyboardInterrupt:
+            self.running = False
         except Exception as e:
-            print(e)
+            logging.error(f"Aborting! Unhandled error:\n{e}")
+        finally:
+            self._connection.stop()
