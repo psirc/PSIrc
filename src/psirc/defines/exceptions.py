@@ -8,3 +8,7 @@ class BadChannelKey(Exception):
 
 class NoSuchChannel(Exception):
     pass
+
+
+class NotOnChannel(Exception):
+    pass

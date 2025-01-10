@@ -22,11 +22,12 @@ class ChannelManager:
         :type channel_name: ``str``
         :param message: message which is being forwarded
         :type message: ``Message``
+        :raises: NoSuchChannel: if channel with declared name does not exist
         :return: None
         :rtype: None
         """
         if channel_name not in self.channels.keys():
-            raise NoSuchChannel
+            raise NoSuchChannel(f"Channel with name: {channel_name} does not exist")
         self.channels[channel_name].forward_message(self.message_sender, message)
 
     def join(self, channel_name: str, nickname: str, key: str = "") -> None:
@@ -35,8 +36,10 @@ class ChannelManager:
 
         :param channel_name: name of the channet to which the message is sent
         :type channel_name: ``str``
-        :param message: message which is being forwarded
-        :type message: ``Message``
+        :param nickname: nickname of user performing join operation
+        :type nickname: ``str``
+        :param key: declared key to the channel
+        :type key: ``str``
         :return: None
         :rtype: None
         """
