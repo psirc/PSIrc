@@ -67,10 +67,7 @@ class IRCServer:
             # TODO : respond with unknown command error
 
     def try_handle_pass_command(
-            self,
-            client_socket: socket.socket,
-            identity: None | Identity,
-            message: Message
+        self, client_socket: socket.socket, identity: None | Identity, message: Message
     ) -> bool:
         '''Try to handle PASS command.
 
@@ -106,13 +103,8 @@ class IRCServer:
             # OK, no response to client
         return True
 
-    def try_handle_nick_command(
-            self,
-            client_socket: socket.socket,
-            identity: Identity,
-            message: Message
-    ) -> bool:
-        '''Try to handle NICK command.
+    def try_handle_nick_command(self, client_socket: socket.socket, identity: Identity, message: Message) -> bool:
+        """Try to handle NICK command.
 
         Command: NICK
         Parameters: <nickname> [ <hop_count> ]
@@ -130,7 +122,7 @@ class IRCServer:
         :param type: ``Message``
         :return: True if message command is NICK, False otherwise
         :rtype: ``bool``
-        '''
+        """
         if message.command is not Command.NICK:
             return False
         # TODO : check for nick collisions
@@ -138,13 +130,8 @@ class IRCServer:
         # QUESTION : Do we want to handle nick change functionality
         return True
 
-    def try_handle_user_command(
-            self,
-            client_socket: socket.socket,
-            identity: Identity,
-            message: Message
-    ) -> bool:
-        '''Try Handle USER command.
+    def try_handle_user_command(self, client_socket: socket.socket, identity: Identity, message: Message) -> bool:
+        """Try Handle USER command.
 
         Command: USER
         Parameters: <username> <hostname> <servername> <real_name>
@@ -163,7 +150,7 @@ class IRCServer:
         :param type: ``Message``
         :return: True if message command is NICK, False otherwise
         :rtype: ``bool``
-        '''
+        """
         if message.command is not Command.USER:
             return False
         if identity.registered():
@@ -175,7 +162,7 @@ class IRCServer:
                 # Local user who is already registered
                 # TODO : respond with already registered error
                 pass
-        elif not identity.nick:
+        elif not identity.nickname:
             # User must first set nick with NICK command
             # TODO : respond with error not registered
             pass
@@ -190,26 +177,16 @@ class IRCServer:
             # TODO: check user
         return True
 
-    def try_handle_server_command(
-            self,
-            client_socket: socket.socket,
-            identity: Identity,
-            message: Message
-    ) -> bool:
+    def try_handle_server_command(self, client_socket: socket.socket, identity: Identity, message: Message) -> bool:
         if message.command is not Command.SERVER:
             return False
         # TODO : handle server registration
         return True
 
-    def try_handle_privmsg_command(
-            self,
-            client_socket: socket.socket,
-            identity: Identity,
-            message: Message
-    ) -> bool:
+    def try_handle_privmsg_command(self, client_socket: socket.socket, identity: Identity, message: Message) -> bool:
         if message.command is not Command.PRIVMSG:
             return False
-        
+
         message.prefix = Prefix(identity.nickname, identity.username, self.nickname)
         receiver = message.params["receiver"]
         message_to_send = message
@@ -236,12 +213,7 @@ class IRCServer:
         client_socket.send(str(message_to_send).encode())
         return True
 
-    def try_handle_join_command(
-            self,
-            client_socket: socket.socket,
-            identity: Identity,
-            message: Message
-    ) -> bool:
+    def try_handle_join_command(self, client_socket: socket.socket, identity: Identity, message: Message) -> bool:
         if message.command is not Command.JOIN:
             return False
         # TODO : implement joining rooms
