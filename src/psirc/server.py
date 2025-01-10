@@ -33,61 +33,188 @@ class IRCServer:
             message = MessageParser.parse_message(data)
             if not message:
                 logging.warning("Invalid message from client")
-                # no response
+                # server sends no response
                 continue
             identity = self._identities.get_identity(client_socket)
+            message_params = (client_socket, identity, message)
 
+            if self.try_handle_pass_command(*message_params):
+                continue
             if not identity:
-                # client not registered accept only PASS command
-                if message.command is IRCCommand.PASS:
-                    # TODO: check for password
-                    logging.info("New client registered")
-                    self._identities.add(client_socket)
-                    # OK, no response to client
-                else:
-                    logging.warning("Client was not registered")
-                    # TODO : respond with not registered error
+                # None identity: client has not successfully send PASS command
+                # TODO : respond with error not registered
                 continue
-            
+
+            if self.try_handle_nick_command(*message_params):
+                continue
+            elif self.try_handle_user_command(*message_params):
+                continue
+            elif self.try_handle_server_command(*message_params):
+                continue
+
             if not identity.registered():
-                # client has not set NICK and (USER or SERVER)
-                if message.command is IRCCommand.NICK:
-                    # TODO : check for nick collisions
-                    identity.nick = message.params.params
-                elif message.command is IRCCommand.USER and identity.nick:
-                    # TODO : parse nick command
-                    identity.type = IdentityType.USER
-                    self._sockets.add_user(identity.nick, client_socket)
-                # TODO : add for elif irccommand.server similar to command user
-                elif message.command is IRCCommand.PASS:
-                    # TODO : respond with already registered error
-                    pass
-                else:
-                    logging.warning("Client was not registered")
-                    # TODO : respond with not registered error
+                # client didn't register NICK or didn't register as USER/SERVER
+                # TODO : respond with not registered
                 continue
 
-            # client is registered and can send other commands
-            if message.command is IRCCommand.PRIVMSG:
-                self.handle_privmsg_command(client_socket, identity, message)
-            elif message.command is IRCCommand.JOIN:
-                self.handle_join_command(client_socket, identity, message)
-            else:
-                # TODO : respond with unknown command error
+            # client is registered
+            if self.try_handle_privmsg_command(client_socket, identity, message):
+                continue
+            elif self.try_handle_join_command(client_socket, identity, message):
+                continue
+
+            # TODO : respond with unknown command error
+            
+
+
+    def try_handle_pass_command(
+            self,
+            client_socket: socket.socket,
+            identity: None | Identity,
+            message: Message
+    ) -> bool:
+        '''Try to handle PASS command.
+
+        Command: PASS
+        Parameters: <password>
+
+        The password must be set before any attempt to register the connection
+        is made, even if server is not password protected.
+
+        Setting a password results in creation of Identity associated with
+        socket in self._identities
+
+        :param client_socket: Socket from which message was received
+        :param type: ``socket``
+        :param identity: Identity associated with socket
+        :param type: ``Identity`` or ``None``
+        :param message: Parsed message received from socket
+        :param type: ``Message``
+        :return: True if message command is PASS, False otherwise
+        :rtype: ``bool``
+        """
+        '''
+        if message.command is not IRCCommand.PASS:
+            return False
+        if identity is not None:
+            # already registered
+            # TODO : respond with already registered error
+            pass
+        else:
+            # TODO: check for password
+            logging.info("New client registered")
+            self._identities.add(client_socket)
+            # OK, no response to client
+        return True
+
+    def try_handle_nick_command(
+            self,
+            client_socket: socket.socket,
+            identity: Identity,
+            message: Message
+    ) -> bool:
+        '''Try to handle NICK command.
+
+        Command: NICK
+        Parameters: <nickname> [ <hop_count> ]
+
+        NICK message is used to give user or server a nickname. The <hop_count>
+        parameter is only used by servers to indicate how far away a nick is
+        from its home server.  A local connection has a hop_count of 0. If
+        supplied by a client, it must be ignored.
+
+        :param client_socket: Socket from which message was received
+        :param type: ``socket``
+        :param identity: Identity associated with socket
+        :param type: ``Identity`` or ``None``
+        :param message: Parsed message received from socket
+        :param type: ``Message``
+        :return: True if message command is NICK, False otherwise
+        :rtype: ``bool``
+        '''
+        if message.command is not IRCCommand.NICK:
+            return False
+        # TODO : check for nick collisions
+        identity.nick = message.params
+        # QUESTION : Do we want to handle nick change functionality
+        return True
+
+    def try_handle_user_command(
+            self,
+            client_socket: socket.socket,
+            identity: Identity,
+            message: Message
+    ) -> None:
+        '''Try Handle USER command.
+
+        Command: USER
+        Parameters: <username> <hostname> <servername> <real_name>
+
+        The USER message is used at the beginning of connection to specify
+        the username, hostname, servername and realname of new user. It is
+        also used in communication between servers to indicate new user
+        arriving on IRC, since only after both USER and NICK have been
+        received from a client does a user become registered.
+
+        :param client_socket: Socket from which message was received
+        :param type: ``socket``
+        :param identity: Identity associated with socket
+        :param type: ``Identity`` or ``None``
+        :param message: Parsed message received from socket
+        :param type: ``Message``
+        :return: True if message command is NICK, False otherwise
+        :rtype: ``bool``
+        '''
+        if message.command is not IRCCommand.USER:
+            return False
+        if identity.registered():
+            if identity.type is IdentityType.SERVER:
+                # Other server indicates new remote user arrival
+                # TODO : handle new user registration from server
                 pass
+            else:
+                # Local user already registered
+                # TODO : respond with already registered error
+                pass
+        elif not identity.nick:
+            # User must first set nick with NICK command
+            # TODO : respond with error not registered
+            pass
+        else:
+            # TODO : parse user command
+            identity.type = IdentityType.USER
+            self._sockets.add_user(identity.nick, client_socket)
+        return True
 
-    def handle_privmsg_command(
+    def try_handle_server_command(
+            self,
+            client_socket: socket.socket,
+            identity: Identity,
+            message: Message
+    ) -> bool:
+        if message.command is not IRCCommand.SERVER:
+            return False
+        # TODO : handle server registration
+        return True
+
+    def try_handle_privmsg_command(
             self,
             client_socket: socket.socket,
             identity: Identity,
             message: Message
     ) -> None:
-        pass
+        if message.command is not IRCCommand.PRIVMSG:
+            return False
+        # TODO : implement private messaging
+        return True
 
-    def handle_join_command(
+    def try_handle_join_command(
             self,
             client_socket: socket.socket,
             identity: Identity,
             message: Message
     ) -> None:
-        pass
+        if message.command is not IRCCommand.JOIN:
+            return False
+        # TODO : implement joining rooms
+        return True
