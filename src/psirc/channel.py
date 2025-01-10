@@ -4,6 +4,10 @@ from psirc.message_sender import MessageSender
 
 
 class Channel:
+    """Class representing channel
+    Is used to perform channel operations
+    """
+
     def __init__(self, name: str, chanop_nickname: str) -> None:
         self.name = name
         self.chanops = [chanop_nickname]
