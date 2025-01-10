@@ -66,7 +66,7 @@ class ConnectionManager:
         while self._running:
             try:
                 data = client_socket.recv(4096)
-                data_list = data.decode().split("\r\n")
+                data_list = data.decode().splitlines(True)
                 print(f"data: {data_list}")
                 for data in data_list:
                     if data:
