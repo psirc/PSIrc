@@ -289,7 +289,7 @@ def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
 def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
     identity = kwargs["identity"]
     message = kwargs["message"]
-    session_manager = ["session_manager"]
+    session_manager = kwargs["session_manager"]
     channel_manager = kwargs["channel_manager"]
     channel_name = message.params["channel"]
 
@@ -312,9 +312,8 @@ def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
     )
     print(nam_rpl)
 
-    print(nam_rpl + names)
-
-    RoutingManager.send_to_user(identity.nickname, topic_rpl + names, session_manager)
+    RoutingManager.send_to_user(identity.nickname, topic_rpl, session_manager)
+    RoutingManager.send_to_user(identity.nickname, nam_rpl, session_manager)
 
 
 CMD_FUNCTIONS = {

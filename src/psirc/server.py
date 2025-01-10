@@ -13,7 +13,9 @@ import logging
 
 
 class IRCServer:
-    def __init__(self, nickname: str, host: str, port: int, max_workers: int = 10, *, password_file: str = "psirc.conf") -> None:
+    def __init__(
+        self, nickname: str, host: str, port: int, max_workers: int = 10, *, password_file: str = "psirc.conf"
+    ) -> None:
         self.running = False
         self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
@@ -60,7 +62,7 @@ class IRCServer:
                     "message": message,
                     "nickname": self.nickname,
                     "connection_manager": self._connection,
-                    "password_handler": self._password_handler
+                    "password_handler": self._password_handler,
                     "channel_manager": self._channels,
                 }
 

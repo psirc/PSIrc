@@ -79,7 +79,7 @@ class ChannelManager:
         :return: Channel instance corresponding to given name
         :rtype: Channel
         """
-        if channel_name not in self.channel_names.keys():
+        if channel_name not in self.channels.keys():
             raise NoSuchChannel(f"Channel with name: {channel_name} does not exist")
         return self.channels[channel_name]
 
