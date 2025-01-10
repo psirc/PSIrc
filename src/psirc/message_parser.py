@@ -103,6 +103,7 @@ class MessageParser:
 
     @classmethod
     def parse_message(cls, data: str) -> Message | None:
+        print(f"message parse: data: {data}")
         """Parse a received message string
 
         :param data: The received message
