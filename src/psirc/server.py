@@ -32,7 +32,7 @@ class IRCServer:
                 client_socket, data = result
                 message = MessageParser.parse_message(data)
                 if not message:
-                    logging.warning("Invalid message from client")
+                    logging.warning(f"Invalid message from client:\n{data}")
                     # server sends no response
                     continue
                 identity = self._identities.get_identity(client_socket)
