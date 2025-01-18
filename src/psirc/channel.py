@@ -1,5 +1,5 @@
-from psirc.defines.exceptions import BannedFromChannel, BadChannelKey, NotOnChannel
-from psirc.message import Message
+import logging
+from psirc.defines.exceptions import BannedFromChannel, BadChannelKey, NotOnChannel, ChanopPrivIsNeeded
 
 
 class Channel:
@@ -40,14 +40,33 @@ class Channel:
         if key != self.key:
             raise BadChannelKey
 
+        logging.info(f"{self.name}:{nickname} joined the channel")
         self.users.append(nickname)
 
-    def kick(self, nickname: str) -> None:
+    def kick(self, nickname: str, kicked_nick: str) -> None:
         """Kick user from channel
 
+        :param nickname: nickname of user performing KICK operation
+        :type nickname: str
+        :param kicked_nick: nickname of user to be kicked
+        :type kicked_nick: ``str``
+        :raises: ChanopPrivIsNeeded: if user trying to perform operation does not have needed privileges
+        :raises: NotOnChannel: if user with provided nick is not on channel
+        :return: None
+        :rtype: None
+        """
+        if nickname not in self.chanops:
+            raise ChanopPrivIsNeeded(
+                f"Channel operator's privileges needed to perform KICK operation. {nickname} has no such privileges."
+            )
 
-        :param nickname: nickname of user performing join operation
-        :type nickname: ``str``
+        self.part(kicked_nick)
+
+    def part(self, nickname: str) -> None:
+        """Part from channel
+
+        :param nickname: nickname of user departing from channel
+        :type nickname: str
         :raises: NotOnChannel: if user with provided nick is not on channel
         :return: None
         :rtype: None
@@ -56,3 +75,8 @@ class Channel:
             raise NotOnChannel(f"user with nick: {nickname} is not on channel: {self.name}")
 
         self.users.remove(nickname)
+        if nickname in self.chanops:
+            self.chanops.remove(nickname)
+
+    def names(self) -> str:
+        return " ".join((("@" + nickname if nickname in self.chanops else "+" + nickname) for nickname in self.users))

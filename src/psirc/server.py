@@ -8,22 +8,29 @@ from psirc.session_info import SessionInfo, SessionType
 from psirc.session_info_manager import SessionInfoManager
 from psirc.user_manager import UserManager
 import psirc.command_manager as cmd_manager
+from psirc.password_handler import PasswordHandler
+from psirc.channel_manager import ChannelManager
 
 import logging
 
 
 class IRCServer:
-    def __init__(self, nickname: str, host: str, port: int, password: str | None = None, max_workers: int = 10) -> None:
+    def __init__(
+        self, nickname: str, host: str, port: int, max_workers: int = 10, *, password_file: str = "psirc.conf"
+    ) -> None:
         self.running = False
         self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
         self._connection = ConnectionManager(host, port, self._thread_executor)
         self._users = UserManager()
         self._sessions = SessionInfoManager()
+        self._password_handler = PasswordHandler(password_file)
+        self._channels = ChannelManager()
 
     def start(self) -> None:
         self.running = True
         self._connection.start()
+        self._password_handler.parse_config()
 
         try:
             while self.running:
@@ -39,16 +46,6 @@ class IRCServer:
                     continue
                 session_info = self._sessions.get_info(client_socket)
 
-                # TEMPORARY, FOR CAP LS HANDLING, WILL BE MOVED TO SEPARATE FUNCTION
-                if message.command == Command.CAP and message.params:
-                    print(message.params["param"])
-                    response_params = Params({"param": "END"})
-                    response = Message(prefix=None, command=Command.CAP, params=response_params)
-                    print(f"crafted response to CAP: [{response}]")
-                    print(str(response).encode())
-                    client_socket.send(str(response).encode())
-                    continue
-
                 cmd_args = {
                     "identity_manager": self._identities,
                     "session_manager": self._sockets,
@@ -56,7 +53,9 @@ class IRCServer:
                     "identity": session_info,
                     "message": message,
                     "nickname": self.nickname,
-                    "connection_manager": self._connection
+                    "connection_manager": self._connection,
+                    "password_handler": self._password_handler,
+                    "channel_manager": self._channels,
                 }
 
                 if message.command not in cmd_manager.CMD_FUNCTIONS.keys():

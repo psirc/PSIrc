@@ -16,7 +16,10 @@ CMD_PARAMS = {
     Command.RPL_ENDOFWHOIS: ["nickname"],
     Command.RPL_WHOISCHANNELS: ["nickname", "channel"],
     Command.RPL_WELCOME: ["nickname"],
+    Command.RPL_TOPIC: ["channel", "trailing"],
+    Command.RPL_NAMREPLY: ["channel", "trailing"],
     Command.ERR_NOSUCHNICK: ["nickname"],
+    Command.ERR_NOSUCHCHANNEL: ["channel"],
     Command.ERR_NOSUCHSERVER: ["server"],
     Command.ERR_CANNOTSENDTOCHAN: ["channel"],
     Command.ERR_TOOMANYCHANNELS: ["channel"],
@@ -26,9 +29,10 @@ CMD_PARAMS = {
     Command.NICK: ["nickname"],
     Command.USER: ["username", "hostname", "servername", "realname"],
     Command.PRIVMSG: ["receiver", "trailing"],
-    Command.PING: ["trailing"],
+    Command.PING: ["receiver"],
+    Command.PONG: ["receivedby"],
     Command.JOIN: ["channel"],
-    Command.CAP: ["param", "spec"]
+    Command.CAP: ["param", "spec"],
 }
 
 CMD_MESSAGES = {

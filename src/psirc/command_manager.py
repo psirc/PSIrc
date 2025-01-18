@@ -12,6 +12,10 @@ from psirc.identity import IdentityType, Identity
 from psirc.session_manager import SessionManager
 from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
+from psirc.channel_manager import ChannelManager
+from psirc.password_handler import PasswordHandler
+from psirc.irc_validator import IRCValidator
+from psirc.defines.exceptions import NoSuchChannel
 
 
 class CmdArgs(TypedDict):
@@ -22,32 +26,11 @@ class CmdArgs(TypedDict):
     message: Message
     nickname: str
     connection_manager: ConnectionManager
+    password_handler: PasswordHandler
+    channel_manager: ChannelManager
 
 
-def try_handle_quit_command(
-        **kwargs: Unpack[CmdArgs]
-) -> bool:
-    '''Try to handle QUIT command.
-
-    Command: QUIT
-    Parameters: [<quit_message>]
-
-    A client session is ended with a quit message.  The server must close
-    the connection to a client which sends a QUIT message. If a "Quit
-    Message" is given, this will be sent instead of the default message,
-    the nickname.
-
-    :param client_socket: Socket from which message was received
-    :param type: ``socket``
-    :param identity: Identity associated with socket
-    :param type: ``Identity`` or ``None``
-    :param message: Parsed message received from socket
-    :param type: ``Message``
-    :return: True if message command is PASS, False otherwise
-    :rtype: ``bool``
-    """
-    '''
-
+def _quit_connection(**kwargs: Unpack[CmdArgs]) -> bool:
     message = kwargs["message"]
     client_socket = kwargs["client_socket"]
     identity = kwargs["identity"]
@@ -70,9 +53,36 @@ def try_handle_quit_command(
     return True
 
 
-def try_handle_pass_command(
-        **kwargs: Unpack[CmdArgs]
-) -> bool:
+def try_handle_quit_command(**kwargs: Unpack[CmdArgs]) -> bool:
+    '''Try to handle QUIT command.
+
+    Command: QUIT
+    Parameters: [<quit_message>]
+
+    A client session is ended with a quit message.  The server must close
+    the connection to a client which sends a QUIT message. If a "Quit
+    Message" is given, this will be sent instead of the default message,
+    the nickname.
+
+    :param client_socket: Socket from which message was received
+    :param type: ``socket``
+    :param identity: Identity associated with socket
+    :param type: ``Identity`` or ``None``
+    :param message: Parsed message received from socket
+    :param type: ``Message``
+    :return: True if message command is PASS, False otherwise
+    :rtype: ``bool``
+    """
+    '''
+    message = kwargs["message"]
+
+    if message.command is not Command.QUIT:
+        return False
+    _quit_connection(**kwargs)
+    return True
+
+
+def try_handle_pass_command(**kwargs: Unpack[CmdArgs]) -> bool:
     '''Try to handle PASS command.
 
     Command: PASS
@@ -138,9 +148,13 @@ def try_handle_nick_command(**kwargs: Unpack[CmdArgs]) -> bool:
 
     message = kwargs["message"]
     identity = kwargs["identity"]
+    client_socket = kwargs["client_socket"]
+    identity_manager = kwargs["identity_manager"]
 
     if not identity:
-        return False
+        print("client connecting without pass, adding identity")
+        identity_manager.add(client_socket, '')
+        identity = identity_manager.get_identity(client_socket)
 
     if message.command is not Command.NICK:
         return False
@@ -177,6 +191,7 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
     identity = kwargs["identity"]
     client_socket = kwargs["client_socket"]
     session_manager = kwargs["session_manager"]
+    password_handler = kwargs["password_handler"]
 
     if not identity:
         return False
@@ -201,16 +216,23 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
         if message.params:
             identity.username = message.params["username"]
             identity.realname = message.params["realname"]
+            address = f"{message.params['hostname']}@{message.params['servername']}"
         else:
+            return False
+
+        if not password_handler.valid_password(address, identity.password):
+            logging.info(f"Incorrect password given for {identity.username}")
+            # TODO: Add ERR_PASSWDMISMATCH here
+            _quit_connection(**kwargs)
             return False
         session_manager.add_user(identity.nickname, client_socket)
         logging.info(f"Registered: {identity}")
 
         response = Message(
-                prefix=None,
-                command=Command.RPL_WELCOME,
-                params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname)
-            )
+            prefix=None,
+            command=Command.RPL_WELCOME,
+            params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname),
+        )
         print(f"welcome packet: [{str(response)}]")
         RoutingManager.respond_client(client_socket, response)
         # now that the three commands needed for registrations are present
@@ -236,6 +258,7 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     identity = kwargs["identity"]
     nickname = kwargs["nickname"]
     session_manager = kwargs["session_manager"]
+    channel_manager: ChannelManager = kwargs["channel_manager"]
     client_socket = kwargs["client_socket"]
 
     if message.command is not Command.PRIVMSG:
@@ -243,8 +266,6 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
 
     if not identity or not identity.registered():
         return False
-
-    print("in privmsg")
 
     message.prefix = Prefix(identity.nickname, identity.username, nickname)
 
@@ -264,7 +285,14 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
     message_to_send = message
 
     try:
-        RoutingManager.send_to_user(receiver, message_to_send, session_manager)
+        if IRCValidator.validate_channel(receiver):
+            channel_manager.forward_message(session_manager, identity.nickname, receiver, message_to_send)
+        else:
+            RoutingManager.send_to_user(receiver, message_to_send, session_manager)
+    except NoSuchChannel:
+        pass
+        # TODO
+        # message_error = Message(prefix=None, command=Command.ERR_NOSUCHCHANNEL, params=)
     except KeyError:
         message_error = Message(
             prefix=None,
@@ -277,22 +305,55 @@ def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
 def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
     identity = kwargs["identity"]
     message = kwargs["message"]
+    client_socket = kwargs["client_socket"]
 
     if not identity or not identity.registered():
         return False
 
-    if message.params:
-        receiver = message.params["receiver"]  # this is us
-    
-    ...
+    receiver = message.params["receiver"] if message.params else ""  # this is us
+
+    response = Message(prefix=None, command=Command.PONG, params=parametrize(Command.PONG, receivedby=receiver))
+    client_socket.send(str(response).encode())
+    return True
+
+
+def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
+    identity = kwargs["identity"]
+    message = kwargs["message"]
+    session_manager = kwargs["session_manager"]
+    channel_manager = kwargs["channel_manager"]
+    channel_name = message.params["channel"]
+
+    # TODO handling banned users, and key protected channels + handle channel topic
+    channel_manager.join(channel_name, identity.nickname)
+    topic_rpl = Message(
+        prefix=None,
+        command=Command.RPL_TOPIC,
+        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing="No topic yet"),
+    )
+    print(topic_rpl)
+
+    # handle better namereply
+    names = channel_manager.get_names(channel_name)
+
+    nam_rpl = Message(
+        prefix=None,
+        command=Command.RPL_NAMREPLY,
+        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing=names),
+    )
+    print(nam_rpl)
+
+    RoutingManager.send_to_user(identity.nickname, topic_rpl, session_manager)
+    RoutingManager.send_to_user(identity.nickname, nam_rpl, session_manager)
 
 
 CMD_FUNCTIONS = {
-        Command.PASS: try_handle_pass_command,
-        Command.NICK: try_handle_nick_command,
-        Command.USER: try_handle_user_command,
-        Command.SERVER: try_handle_server_command,
-        Command.PRIVMSG: try_handle_privmsg_command,
-        Command.QUIT: try_handle_quit_command
+    Command.PASS: try_handle_pass_command,
+    Command.NICK: try_handle_nick_command,
+    Command.USER: try_handle_user_command,
+    Command.SERVER: try_handle_server_command,
+    Command.PRIVMSG: try_handle_privmsg_command,
+    Command.QUIT: try_handle_quit_command,
+    Command.PING: try_handle_ping_command,
+    Command.JOIN: try_handle_join_command,
 }
-
