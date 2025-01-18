@@ -1,10 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor
+import socket
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
 from psirc.message import Message, Params
 from psirc.defines.responses import Command
-from psirc.identity_manager import IdentityManager
-from psirc.session_manager import SessionManager
+from psirc.session_info import SessionInfo, SessionType
+from psirc.session_info_manager import SessionInfoManager
+from psirc.user_manager import UserManager
 import psirc.command_manager as cmd_manager
 
 import logging
@@ -16,8 +18,8 @@ class IRCServer:
         self.nickname = nickname
         self._thread_executor = ThreadPoolExecutor(max_workers)
         self._connection = ConnectionManager(host, port, self._thread_executor)
-        self._sockets = SessionManager()
-        self._identities = IdentityManager()
+        self._users = UserManager()
+        self._sessions = SessionInfoManager()
 
     def start(self) -> None:
         self.running = True
@@ -35,7 +37,7 @@ class IRCServer:
                     logging.warning(f"Invalid message from client:\n{data}")
                     # server sends no response
                     continue
-                identity = self._identities.get_identity(client_socket)
+                session_info = self._sessions.get_info(client_socket)
 
                 # TEMPORARY, FOR CAP LS HANDLING, WILL BE MOVED TO SEPARATE FUNCTION
                 if message.command == Command.CAP and message.params:
@@ -51,7 +53,7 @@ class IRCServer:
                     "identity_manager": self._identities,
                     "session_manager": self._sockets,
                     "client_socket": client_socket,
-                    "identity": identity,
+                    "identity": session_info,
                     "message": message,
                     "nickname": self.nickname,
                     "connection_manager": self._connection
