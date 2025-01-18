@@ -34,7 +34,11 @@ class Command(Enum):
     ERR_NOTEXTTOSEND = 412
 
     ERR_NONICKNAMEGIVEN = 431
+    ERR_NICKCOLLISION = 436
     ERR_NOTREGISTERED = 451
+
+    ERR_ALREADYREGISTRED = 462
+    ERR_PASSWDMISMATCH = 464
 
     # Responses greater than 1000
     # Representing text commands

@@ -3,7 +3,7 @@ from psirc.defines.exceptions import NoSuchChannel
 from psirc.channel import Channel
 from psirc.message import Message
 from psirc.routing_manager import RoutingManager
-from psirc.session_manager import SessionManager
+from psirc.user_manager import UserManager
 
 
 class ChannelManager:
@@ -16,7 +16,7 @@ class ChannelManager:
         self.channels: dict[str, Channel] = {}
 
     def forward_message(
-        self, session_manager: SessionManager, nickname: str, channel_name: str, message: Message
+        self, session_manager: UserManager, nickname: str, channel_name: str, message: Message
     ) -> None:
         """Delegate PRIVMSG handling to the channel
 
@@ -50,6 +50,10 @@ class ChannelManager:
         except NoSuchChannel:
             logging.info(f"NoSuchChanel: {channel_name}, creating...")
             self._create_channel(channel_name, nickname)
+
+    def quit(self, nickname: str)  -> None:
+        # TODO: remove user from all channels
+        pass
 
     def kick(self, channel_name: str, nickname: str, kicked_nick: str) -> None:
         """Delegate KICK - kick from channel
