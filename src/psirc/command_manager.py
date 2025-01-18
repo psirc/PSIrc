@@ -1,60 +1,18 @@
 import socket
 import logging
-from typing import TypedDict
-from typing_extensions import Unpack
 
-from psirc.connection_manager import ConnectionManager
-from psirc.message_parser import MessageParser
-from psirc.message import Message, Prefix, Params
+from psirc.server import IRCServer, AlreadyRegistered
+from psirc.message import Message, Prefix
 from psirc.defines.responses import Command
-from psirc.identity_manager import IdentityManager
-from psirc.identity import IdentityType, Identity
-from psirc.session_manager import SessionManager
+from psirc.session_info import SessionInfo, SessionType
 from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
-from psirc.channel_manager import ChannelManager
-from psirc.password_handler import PasswordHandler
 from psirc.irc_validator import IRCValidator
 from psirc.defines.exceptions import NoSuchChannel
 
 
-class CmdArgs(TypedDict):
-    identity_manager: IdentityManager
-    session_manager: SessionManager
-    client_socket: socket.socket
-    identity: None | Identity
-    message: Message
-    nickname: str
-    connection_manager: ConnectionManager
-    password_handler: PasswordHandler
-    channel_manager: ChannelManager
-
-
-def _quit_connection(**kwargs: Unpack[CmdArgs]) -> bool:
-    message = kwargs["message"]
-    client_socket = kwargs["client_socket"]
-    identity = kwargs["identity"]
-    session_manager = kwargs["session_manager"]
-    identity_manager = kwargs["identity_manager"]
-    connection_manager = kwargs["connection_manager"]
-
-    if message.command is not Command.QUIT:
-        return False
-    connection_manager.disconnect_client(client_socket)
-    if identity is None:
-        return True
-    identity_manager.remove(client_socket)
-    if identity.type is IdentityType.USER:
-        session_manager.remove_user(identity.nickname)
-        # TODO : notify remote servers
-    elif identity.type is IdentityType.SERVER:
-        # TODO : server removal functionality
-        pass
-    return True
-
-
-def try_handle_quit_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    '''Try to handle QUIT command.
+def handle_quit_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
+    '''Handle QUIT command.
 
     Command: QUIT
     Parameters: [<quit_message>]
@@ -70,19 +28,22 @@ def try_handle_quit_command(**kwargs: Unpack[CmdArgs]) -> bool:
     :param type: ``Identity`` or ``None``
     :param message: Parsed message received from socket
     :param type: ``Message``
-    :return: True if message command is PASS, False otherwise
-    :rtype: ``bool``
+    :return: None
     """
     '''
-    message = kwargs["message"]
 
     if message.command is not Command.QUIT:
-        return False
-    _quit_connection(**kwargs)
-    return True
+        raise ValueError("Implementation error: Wrong command type")
+    if session_info.type is SessionType.USER or session_info is None:
+        server.remove_local_user(client_socket, session_info)
+    elif session_info.type is SessionType.SERVER:
+        server.remove_external_user(message.prefix.user)
+    else:
+        raise ValueError("Unhandled quit command error")
+    # TODO: notify other servers about user quit
 
 
-def try_handle_pass_command(**kwargs: Unpack[CmdArgs]) -> bool:
+def handle_pass_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
     '''Try to handle PASS command.
 
     Command: PASS
@@ -105,28 +66,22 @@ def try_handle_pass_command(**kwargs: Unpack[CmdArgs]) -> bool:
     """
     '''
 
-    message = kwargs["message"]
-    identity = kwargs["identity"]
-    client_socket = kwargs["client_socket"]
-    identity_manager = kwargs["identity_manager"]
-
     if message.command is not Command.PASS:
-        return False
-    if identity is not None:
-        # already registered
-        # TODO : respond with already registered error
-        pass
-    else:
-        # TODO: check for password -> password is checked later - now just connect it to identity
-        logging.info("Set PASS")
+        raise ValueError("Implementation error: Wrong command type")
+    try:
         if message.params:
-            identity_manager.add(client_socket, message.params["password"])
+            server.register_local_connection(client_socket, session_info, message.params)
+        else:
+            # missing params
+            raise ValueError("Missing params from message command PASS")
         # OK, no response to client
-    return True
+    except AlreadyRegistered:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED)
+    # OK, no response to client
 
 
-def try_handle_nick_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    """Try to handle NICK command.
+def handle_nick_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> bool:
+    """Handle NICK command.
 
     Command: NICK
     Parameters: <nickname> [ <hop_count> ]
@@ -146,27 +101,27 @@ def try_handle_nick_command(**kwargs: Unpack[CmdArgs]) -> bool:
     :rtype: ``bool``
     """
 
-    message = kwargs["message"]
-    identity = kwargs["identity"]
-    client_socket = kwargs["client_socket"]
-    identity_manager = kwargs["identity_manager"]
-
-    if not identity:
-        print("client connecting without pass, adding identity")
-        identity_manager.add(client_socket, '')
-        identity = identity_manager.get_identity(client_socket)
-
     if message.command is not Command.NICK:
-        return False
-    # TODO : check for nick collisions
-    if message.params:
-        identity.nickname = message.params["nickname"]
-    # QUESTION : Do we want to handle nick change functionality
-    return True
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        logging.info("client connecting without PASS, adding SessionInfo")
+        server.register_local_connection(client_socket, None, '')
+        session_info = server._sessions.get_info(client_socket)
+
+    if message.params and "nickname" in message.params:
+        nickname = message.params["nickname"]
+    else:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+
+    if not server.is_unique(nickname):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
+
+    session_info.nickname = nickname
 
 
-def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    """Try Handle USER command.
+def handle_user_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
+    """Handle USER command.
 
     Command: USER
     Parameters: <username> <hostname> <servername> <real_name>
@@ -186,146 +141,107 @@ def try_handle_user_command(**kwargs: Unpack[CmdArgs]) -> bool:
     :return: True if message command is NICK, False otherwise
     :rtype: ``bool``
     """
-
-    message = kwargs["message"]
-    identity = kwargs["identity"]
-    client_socket = kwargs["client_socket"]
-    session_manager = kwargs["session_manager"]
-    password_handler = kwargs["password_handler"]
-
-    if not identity:
-        return False
-
     if message.command is not Command.USER:
-        return False
-    if identity.registered():
-        if identity.type is IdentityType.SERVER:
-            # Other server indicates new remote user arrival
-            # TODO : handle new user registration from server
-            pass
-        else:
-            # Local user who is already registered
-            # TODO : respond with already registered error
-            pass
-    elif not identity.nickname:
-        # User must first set nick with NICK command
-        # TODO : respond with error not registered
-        pass
-    else:
-        identity.type = IdentityType.USER
+        raise ValueError("Implementation error: Wrong command type")
+    if not session_info:
+        # need to NICK command first
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        return
+
+    if session_info.type == SessionType.USER:
+        # already registered
+        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED)
+    elif session_info.type == SessionType.UNKNOWN:
+        # register local user
+        if not session_info.nickname:
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+            return
+        session_info.type = SessionType.USER
         if message.params:
-            identity.username = message.params["username"]
-            identity.realname = message.params["realname"]
+            session_info.username = message.params["username"]
+            session_info.realname = message.params["realname"]
             address = f"{message.params['hostname']}@{message.params['servername']}"
         else:
             return False
 
-        if not password_handler.valid_password(address, identity.password):
-            logging.info(f"Incorrect password given for {identity.username}")
-            # TODO: Add ERR_PASSWDMISMATCH here
-            _quit_connection(**kwargs)
-            return False
-        session_manager.add_user(identity.nickname, client_socket)
-        logging.info(f"Registered: {identity}")
+        if not server._password_handler.valid_password(address, session_info.password):
+            logging.info(f"Incorrect password given for {session_info.username}: {session_info.password}")
+            RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
+            server.remove_local_user(client_socket, session_info)
+            return
+        
+        server.register_local_user(client_socket, session_info)
+        logging.info(f"Registered: {session_info}")
 
         response = Message(
             prefix=None,
             command=Command.RPL_WELCOME,
-            params=parametrize(Command.RPL_WELCOME, nickname=identity.nickname),
+            params=parametrize(Command.RPL_WELCOME, nickname=session_info.nickname),
         )
-        print(f"welcome packet: [{str(response)}]")
+        logging.info(f"Welcome packet: [{str(response)}]")
         RoutingManager.respond_client(client_socket, response)
-        # now that the three commands needed for registrations are present
-        # server can verify user, and register user /
-        # TODO: check user
-    return True
+        # TODO: notify other servers of new user
+    elif session_info.type == SessionType.SERVER:
+        # TODO: register new external user arrival
+        raise NotImplementedError("Registering users from other servers not implemented")
 
 
-def try_handle_server_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    message = kwargs["message"]
-    identity = kwargs["identity"]
-
+def handle_server_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> bool:
     if message.command is not Command.SERVER:
-        return False
+        raise ValueError("Implementation error: Wrong command type")
     # TODO : handle server registration
-    if not identity:
-        return False
-    return True
+    raise NotImplementedError("SERVER command not implemented")
 
 
-def try_handle_privmsg_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    message = kwargs["message"]
-    identity = kwargs["identity"]
-    nickname = kwargs["nickname"]
-    session_manager = kwargs["session_manager"]
-    channel_manager: ChannelManager = kwargs["channel_manager"]
-    client_socket = kwargs["client_socket"]
-
+def handle_privmsg_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> bool:
     if message.command is not Command.PRIVMSG:
-        return False
+        raise ValueError("Implementation error: Wrong command type")
 
-    if not identity or not identity.registered():
-        return False
+    if not session_info or not session_info.registered():
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED)
+        return
 
-    message.prefix = Prefix(identity.nickname, identity.username, nickname)
+    message.prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
 
     receiver = None
     if message.params:
         receiver = message.params["receiver"]
 
     if not receiver:
-        message_error = Message(
-            prefix=None,
-            command=Command.ERR_NONICKNAMEGIVEN,
-            params=parametrize(Command.ERR_NONICKNAMEGIVEN),
-        )
-        RoutingManager.respond_client(client_socket, message_error)
-        return False
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        return
 
     message_to_send = message
 
     try:
         if IRCValidator.validate_channel(receiver):
-            channel_manager.forward_message(session_manager, identity.nickname, receiver, message_to_send)
+            channel = server._channels.get_channel(receiver)
+            RoutingManager.send_to_channel(channel, message_to_send, server._users)
         else:
-            RoutingManager.send_to_user(receiver, message_to_send, session_manager)
+            RoutingManager.send_to_user(receiver, message_to_send, server._users)
     except NoSuchChannel:
-        pass
-        # TODO
-        # message_error = Message(prefix=None, command=Command.ERR_NOSUCHCHANNEL, params=)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL)
+        return
     except KeyError:
-        message_error = Message(
-            prefix=None,
-            command=Command.ERR_NOSUCHNICK,
-            params=parametrize(Command.ERR_NOSUCHNICK, nickname=receiver),
-        )
-        RoutingManager.respond_client(client_socket, message_error)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK)
 
 
-def try_handle_ping_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    identity = kwargs["identity"]
-    message = kwargs["message"]
-    client_socket = kwargs["client_socket"]
+def handle_ping_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
 
-    if not identity or not identity.registered():
+    if not session_info or not session_info.registered():
         return False
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
     response = Message(prefix=None, command=Command.PONG, params=parametrize(Command.PONG, receivedby=receiver))
-    client_socket.send(str(response).encode())
-    return True
+    RoutingManager.respond_client(client_socket, response)
 
 
-def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
-    identity = kwargs["identity"]
-    message = kwargs["message"]
-    session_manager = kwargs["session_manager"]
-    channel_manager = kwargs["channel_manager"]
+def handle_join_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
+
     channel_name = message.params["channel"]
-
     # TODO handling banned users, and key protected channels + handle channel topic
-    channel_manager.join(channel_name, identity.nickname)
+    server._channels.join(channel_name, session_info.nickname)
     topic_rpl = Message(
         prefix=None,
         command=Command.RPL_TOPIC,
@@ -334,7 +250,7 @@ def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
     print(topic_rpl)
 
     # handle better namereply
-    names = channel_manager.get_names(channel_name)
+    names = server._channels.get_names(channel_name)
 
     nam_rpl = Message(
         prefix=None,
@@ -343,17 +259,17 @@ def try_handle_join_command(**kwargs: Unpack[CmdArgs]) -> bool:
     )
     print(nam_rpl)
 
-    RoutingManager.send_to_user(identity.nickname, topic_rpl, session_manager)
-    RoutingManager.send_to_user(identity.nickname, nam_rpl, session_manager)
+    RoutingManager.send_to_user(session_info.nickname, topic_rpl, server._users)
+    RoutingManager.send_to_user(session_info.nickname, nam_rpl, server._users)
 
 
 CMD_FUNCTIONS = {
-    Command.PASS: try_handle_pass_command,
-    Command.NICK: try_handle_nick_command,
-    Command.USER: try_handle_user_command,
-    Command.SERVER: try_handle_server_command,
-    Command.PRIVMSG: try_handle_privmsg_command,
-    Command.QUIT: try_handle_quit_command,
-    Command.PING: try_handle_ping_command,
-    Command.JOIN: try_handle_join_command,
+    Command.PASS: handle_pass_command,
+    Command.NICK: handle_nick_command,
+    Command.USER: handle_user_command,
+    Command.SERVER: handle_server_command,
+    Command.PRIVMSG: handle_privmsg_command,
+    Command.QUIT: handle_quit_command,
+    Command.PING: handle_ping_command,
+    Command.JOIN: handle_join_command,
 }

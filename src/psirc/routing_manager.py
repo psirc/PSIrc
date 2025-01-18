@@ -2,8 +2,10 @@ import socket
 import logging
 
 from psirc.message import Message
-from psirc.session_manager import SessionManager
+from psirc.response_params import parametrize
+from psirc.user_manager import UserManager
 from psirc.channel import Channel
+from psirc.defines.responses import Command
 
 
 class RoutingManager:
@@ -12,20 +14,38 @@ class RoutingManager:
         client_socket.send(str(response).encode())
 
     @staticmethod
-    def send_to_user(receiver_nick: str, message: Message, session_manager: SessionManager) -> None:
-        # for now only sends to local()
-        print(session_manager)
-        receiver_socket = session_manager.get_user_socket(receiver_nick)
-        if not receiver_socket:
+    def respond_client_error(client_socket, error_type: Command) -> None:
+        message_error = Message(
+            prefix=None,
+            command=error_type,
+            params=parametrize(error_type),
+        )
+        RoutingManager.respond_client(client_socket, message_error)
+
+    @staticmethod
+    def send_to_user(receiver_nick: str, message: Message, user_manager: UserManager) -> None:
+        # for now only sends to local
+        receiver = user_manager.get_user(receiver_nick)
+        if not receiver:
             raise KeyError("Receiver not found")
-        logging.info(f"Forwarding private message: {message}")
-        receiver_socket.send(str(message).encode())
+        if receiver.is_local():
+            logging.info(f"Forwarding private message: {message}")
+            receiver.get_route().send(str(message).encode())
+        else:
+            # TODO: forward to server
+            raise NotImplementedError("send to user external")
         return
 
     @staticmethod
-    def send_to_channel(channel: Channel, nickname: str, message: Message, session_manager: SessionManager) -> None:
+    def send_to_channel(channel: Channel, message: Message, user_manager: UserManager) -> None:
         # for now only sends to local
         encoded_message = str(message).encode()
-        for nick in channel.users:
-            if nick != nickname:
-                session_manager.get_user_socket(nick).send(encoded_message)
+        external_users = []
+        logging.info(f"Forwarding private message: {message}")
+        for nickname in channel.users:
+            user = user_manager.get_user(nickname)
+            if user.is_local():
+                user.get_route().send(encoded_message)
+            else:
+                external_users.append(user)
+        # TODO: forward to servers

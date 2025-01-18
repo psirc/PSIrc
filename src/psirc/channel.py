@@ -9,9 +9,9 @@ class Channel:
 
     def __init__(self, name: str, chanop_nickname: str) -> None:
         self.name = name
-        self.chanops = [chanop_nickname]
-        self.users = [chanop_nickname]
-        self.banned_users = []
+        self.chanops = {chanop_nickname}
+        self.users = {chanop_nickname}
+        self.banned_users = {}
         self.key = ""
 
     def join(self, nickname: str, key: str = "") -> None:
@@ -41,7 +41,7 @@ class Channel:
             raise BadChannelKey
 
         logging.info(f"{self.name}:{nickname} joined the channel")
-        self.users.append(nickname)
+        self.users.add(nickname)
 
     def kick(self, nickname: str, kicked_nick: str) -> None:
         """Kick user from channel
