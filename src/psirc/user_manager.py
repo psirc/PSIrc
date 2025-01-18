@@ -70,9 +70,9 @@ class UserManager:
 
     def list_users(self) -> list[str]:
         """
-        List all locally connected users
+        List all users
 
-        :return: list of locally connected users
+        :return: list of users
         :rtype: ``list[str]``
         """
         with self._lock:
@@ -80,7 +80,7 @@ class UserManager:
 
     def remove(self, user_nick: str) -> None:
         """
-        Remove user socket from
+        Remove local or external user
 
         :param client_name: name of client
         :type client_name: ``str``
@@ -90,3 +90,21 @@ class UserManager:
         with self._lock:
             self._users.pop(user_nick, None)
 
+    def remove_from_server(self, server_nickname: str) -> list[User]:
+        """
+        Remove all users socket from
+
+        :param client_name: name of client
+        :type client_name: ``str``
+        :return: list of removed users
+        :rtype: None
+        """
+        with self._lock:
+            disconnected_users = [
+                user for user in self._users.values()
+                if not user.is_local() and user.get_route() == server_nickname
+            ]
+            for user in disconnected_users:
+                self._users.pop(user.nick)
+            return disconnected_users
+            
