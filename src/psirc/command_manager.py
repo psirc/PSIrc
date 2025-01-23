@@ -19,17 +19,20 @@ def handle_oper_command(
     """Handle Oper command.
     ...
     """  # TODO write doc
+    if not session_info:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED)
+        return
     if message.command is not Command.OPER:
         raise ValueError("Implementation error: Wrong command type")
     # if session_info is not None and session_info.type is SessionType.USER
-    if "user" not in message.params or "password" not in message.params:
+    if not message.params or ("user" not in message.params or "password" not in message.params):
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
     if server.password_handler.valid_operator(message.params["user"], message.params["password"]):
         server._users.add_oper_privileges(session_info.nickname)
         message = Message(prefix=None, command=Command.RPL_YOUREOPER, params=parametrize(Command.RPL_YOUREOPER))
-        RoutingManager.respond_client(client_socket, message)
+        RoutingManager.respond_client(client_socket, command=Command.RPL_YOUREOPER)
     else:
         RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
 
@@ -205,13 +208,11 @@ def handle_user_command(
         server.register_local_user(client_socket, session_info)
         logging.info(f"Registered: {session_info}")
 
-        response = Message(
-            prefix=None,
+        RoutingManager.respond_client(
+            client_socket,
             command=Command.RPL_WELCOME,
-            params=parametrize(Command.RPL_WELCOME, nickname=session_info.nickname),
+            nickname=session_info.nickname
         )
-        logging.info(f"Welcome packet: [{str(response)}]")
-        RoutingManager.respond_client(client_socket, response)
         # TODO: notify other servers of new user
     elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
@@ -260,12 +261,13 @@ def handle_server_command(
     server.register_server(session_info)
     logging.info(f"Registered: {session_info}")
 
-    reply_server = Message(
-        prefix=None,
+    RoutingManager.respond_client(
+        client_socket,
         command=Command.SERVER,
-        params=parametrize(Command.SERVER, servername=server.nickname, hopcount=hop_count, trailing="Serwer CSSetti!"),
+        servername=server.nickname,
+        hopcout=hop_count,
+        trailing="Server desc placeholder"
     )
-    RoutingManager.respond_client(client_socket, reply_server)
     helpers.send_local_user_nicks(client_socket, server, hop_count)
 
 
@@ -305,7 +307,7 @@ def handle_privmsg_command(
 
 
 def handle_ping_command(
-    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+    _: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
 
     if not session_info or not session_info.registered():
@@ -313,12 +315,15 @@ def handle_ping_command(
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
-    response = Message(prefix=None, command=Command.PONG, params=parametrize(Command.PONG, receivedby=receiver))
-    RoutingManager.respond_client(client_socket, response)
+    RoutingManager.respond_client(
+        client_socket,
+        command=Command.PONG,
+        receivedby=receiver
+    )
 
 
 def handle_join_command(
-    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+    server: IRCServer, _: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
 
     if not message.params or not session_info:

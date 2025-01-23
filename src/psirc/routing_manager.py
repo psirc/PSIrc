@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from psirc.message import Message
+from psirc.message import Message, Prefix
 from psirc.response_params import parametrize
 from psirc.client_manager import ClientManager
 from psirc.client import LocalUser
@@ -10,18 +10,28 @@ from psirc.defines.responses import Command
 
 
 class RoutingManager:
-    @staticmethod
-    def respond_client(client_socket: socket.socket, response: Message) -> None:
-        client_socket.send(str(response).encode())
 
     @staticmethod
-    def respond_client_error(client_socket: socket.socket, error_type: Command) -> None:
+    def send_response(client_socket: socket.socket, message: Message) -> None:
+        client_socket.send(str(message).encode())
+
+    @classmethod
+    def respond_client(cls, client_socket: socket.socket, prefix: Prefix | None = None, *, command: Command, **kwargs: str) -> None:
+        response = Message(
+            prefix=prefix,
+            command=command,
+            params=parametrize(command, **kwargs)
+        )
+        cls.send_response(client_socket, response)
+
+    @classmethod
+    def respond_client_error(cls, client_socket: socket.socket, error_type: Command) -> None:
         message_error = Message(
             prefix=None,
             command=error_type,
             params=parametrize(error_type),
         )
-        RoutingManager.respond_client(client_socket, message_error)
+        cls.send_response(client_socket, message_error)
 
     @staticmethod
     def send_to_user(receiver_nick: str, message: Message, client_manager: ClientManager) -> None:
