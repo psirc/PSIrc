@@ -22,8 +22,11 @@ class PasswordHandler:
             return True
 
     @classmethod
-    def valid_operator(cls, type: str, user: str, password: str) -> bool:
+    def _valid_operator_creds(cls, type: str, user: str, password: str) -> bool:
         return all((type == "O", password is not None, IRCValidator.validate_user(user=user)))
+
+    def valid_operator(self, user: str, password: str) -> bool:
+        return user in self._oper_credentials.keys() and password == self._oper_credentials[user]
 
     def _valid_password(self, address: str, password: str) -> bool:
         return not self._passwords["I"][address] or self._passwords["I"][address] == password
@@ -62,7 +65,7 @@ class PasswordHandler:
                     continue
                 line = line.split("#")[0].rstrip()  # strip comments
                 line_list = line[2:].split(":")  # split into parts
-                if self.valid_operator(type, line_list[0], line_list[1]):
+                if self._valid_operator_creds(type, line_list[0], line_list[1]):
                     self._oper_credentials[line_list[0]] = line_list[1]
                     continue
                 elif not self.valid_host(type, line_list[0]):

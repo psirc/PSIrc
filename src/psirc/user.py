@@ -30,6 +30,7 @@ class LocalUser(User):
     def __init__(self, nick: str, socket: socket.socket) -> None:
         super().__init__(nick)
         self._socket = socket
+        self.is_oper = False
 
     @property
     def socket(self) -> socket.socket:

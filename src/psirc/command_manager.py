@@ -20,8 +20,16 @@ def handle_oper_command(
     if message.command is not Command.OPER:
         raise ValueError("Implementation error: Wrong command type")
     # if session_info is not None and session_info.type is SessionType.USER
-    logging.info("in handle oper")
-    pass
+    if "user" not in message.params or "password" not in message.params:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        return
+
+    if server.password_handler.valid_operator(message.params["user"], message.params["password"]):
+        server._users.add_oper_privileges(session_info.nickname)
+        message = Message(prefix=None, command=Command.RPL_YOUREOPER, params=parametrize(Command.RPL_YOUREOPER))
+        RoutingManager.respond_client(client_socket, message)
+    else:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
 
 
 def handle_quit_command(
@@ -186,7 +194,7 @@ def handle_user_command(
         else:
             return
 
-        if not server._password_handler.valid_password(address, session_info.password):
+        if not server.password_handler.valid_password(address, session_info.password):
             logging.info(f"Incorrect password given for {session_info.username}: {session_info.password}")
             RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
             server.remove_local_user(client_socket, session_info)
@@ -234,7 +242,7 @@ def handle_server_command(
     else:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
         return
-    
+
     if message.params and "hopcount" in message.params:
         hop_count = message.params["hopcount"]
     else:
@@ -253,7 +261,7 @@ def handle_server_command(
     reply_server = Message(
         prefix=None,
         command=Command.SERVER,
-        params=parametrize(Command.SERVER, servername=server.nickname, hopcount=hop_count, trailing="Serwer CSSetti!")
+        params=parametrize(Command.SERVER, servername=server.nickname, hopcount=hop_count, trailing="Serwer CSSetti!"),
     )
 
     RoutingManager.respond_client(client_socket, reply_server)

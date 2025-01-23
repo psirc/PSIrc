@@ -22,8 +22,8 @@ class IRCServer:
     ) -> None:
         self.running = False
         self.nickname = nickname
+        self.password_handler = PasswordHandler(config_file)
         self._thread_executor = ThreadPoolExecutor(max_workers)
-        self._password_handler = PasswordHandler(config_file)
         self._connection = ConnectionManager(host, port, self._thread_executor)
         self._sessions = SessionInfoManager()
         self._users = UserManager()
@@ -31,7 +31,7 @@ class IRCServer:
         self._commands = importlib.import_module("psirc.command_manager").CMD_FUNCTIONS
 
     def start(self) -> None:
-        self._password_handler.parse_config()
+        self.password_handler.parse_config()
         self.running = True
         self._connection.start()
 
@@ -109,4 +109,3 @@ class IRCServer:
 
     def register_server(self, session_info: SessionInfo) -> None:
         self._users.add_server(session_info.nickname, session_info.hops)
-
