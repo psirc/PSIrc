@@ -36,6 +36,7 @@ class MessageParser:
             )
         ):
             return Prefix(nick, user or "", host or "")
+        return None
 
     @staticmethod
     def _numeric_command(command: str) -> Command | None:

@@ -158,6 +158,8 @@ def handle_nick_command(
         logging.info("client connecting without PASS, adding SessionInfo")
         server.register_local_connection(client_socket, None, "")
         session_info = server._sessions.get_info(client_socket)
+        if not session_info:
+            raise ValueError("Unexpectedly didnt get session info")
 
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]
@@ -226,11 +228,7 @@ def handle_user_command(
         server.register_local_user(client_socket, session_info)
         logging.info(f"Registered: {session_info}")
 
-        RoutingManager.respond_client(
-            client_socket,
-            command=Command.RPL_WELCOME,
-            nickname=session_info.nickname
-        )
+        RoutingManager.respond_client(client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname)
         # TODO: notify other servers of new user
     elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
@@ -333,11 +331,7 @@ def handle_ping_command(
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
-    RoutingManager.respond_client(
-        client_socket,
-        command=Command.PONG,
-        receivedby=receiver
-    )
+    RoutingManager.respond_client(client_socket, command=Command.PONG, receivedby=receiver)
 
 
 def handle_join_command(
