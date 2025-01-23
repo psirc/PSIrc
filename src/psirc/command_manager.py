@@ -23,11 +23,11 @@ def handle_quit_command(server: IRCServer, client_socket: socket.socket, session
     the nickname.
 
     :param client_socket: Socket from which message was received
-    :param type: ``socket``
+    :type client_socket: ``socket``
     :param identity: Identity associated with socket
-    :param type: ``Identity`` or ``None``
+    :type identity: ``Identity`` or ``None``
     :param message: Parsed message received from socket
-    :param type: ``Message``
+    :type message: ``Message``
     :return: None
     """
     '''
@@ -56,11 +56,11 @@ def handle_pass_command(server: IRCServer, client_socket: socket.socket, session
     socket in self._identities
 
     :param client_socket: Socket from which message was received
-    :param type: ``socket``
+    :type client_socket: ``socket``
     :param identity: Identity associated with socket
-    :param type: ``Identity`` or ``None``
+    :type identity: ``Identity`` or ``None``
     :param message: Parsed message received from socket
-    :param type: ``Message``
+    :type message: ``Message``
     :return: True if message command is PASS, False otherwise
     :rtype: ``bool``
     """
@@ -92,11 +92,11 @@ def handle_nick_command(server: IRCServer, client_socket: socket.socket, session
     supplied by a client, it must be ignored.
 
     :param client_socket: Socket from which message was received
-    :param type: ``socket``
+    :type client_socket: ``socket``
     :param identity: Identity associated with socket
-    :param type: ``Identity`` or ``None``
+    :type identity: ``Identity`` or ``None``
     :param message: Parsed message received from socket
-    :param type: ``Message``
+    :type message: ``Message``
     :return: True if message command is NICK, False otherwise
     :rtype: ``bool``
     """
@@ -134,11 +134,11 @@ def handle_user_command(server: IRCServer, client_socket: socket.socket, session
     received from a client does a user become registered.
 
     :param client_socket: Socket from which message was received
-    :param type: ``socket``
+    :type client_socket: ``socket``
     :param identity: Identity associated with socket
-    :param type: ``Identity`` or ``None``
+    :type identity: ``Identity`` or ``None``
     :param message: Parsed message received from socket
-    :param type: ``Message``
+    :param message: ``Message``
     :return: True if message command is NICK, False otherwise
     :rtype: ``bool``
     """
@@ -182,7 +182,7 @@ def handle_user_command(server: IRCServer, client_socket: socket.socket, session
         logging.info(f"Welcome packet: [{str(response)}]")
         RoutingManager.respond_client(client_socket, response)
         # TODO: notify other servers of new user
-    elif session_info.type == SessionType.SERVER:
+    elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
         raise NotImplementedError("Registering users from other servers not implemented")
 
@@ -195,18 +195,45 @@ def handle_server_command(server: IRCServer, client_socket: socket.socket, sessi
         logging.info("server registered without PASS, adding SessionInfo")
         server.register_local_connection(client_socket, None, '')
         session_info = server._sessions.get_info(client_socket)
+        if not session_info:
+            return
 
-    if message.params and "nickname" in message.params:
-        nickname = message.params["nickname"]
+    if session_info.type == SessionType.SERVER:
+        # already registered
+        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED)
+    elif session_info.type != SessionType.UNKNOWN:
+        raise ValueError("Received SERVER command from registered user!")
+
+    session_info.type = SessionType.SERVER
+
+    if message.params and "servername" in message.params:
+        nickname = message.params["servername"]
     else:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        return
+    
+    if message.params and "hopcount" in message.params:
+        hop_count = message.params["hopcount"]
+    else:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
     if not server.is_unique(nickname):
         RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
 
     session_info.nickname = nickname
-    raise NotImplementedError("SERVER command not implemented")
+    session_info.hops = int(hop_count)
+
+    server.register_server(session_info)
+    logging.info(f"Registered: {session_info}")
+
+    reply_server = Message(
+        prefix=None,
+        command=Command.SERVER,
+        params=parametrize(Command.SERVER, servername=server.nickname, hopcount=hop_count, trailing="Serwer CSSetti!")
+    )
+
+    RoutingManager.respond_client(client_socket, reply_server)
 
 
 def handle_privmsg_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:

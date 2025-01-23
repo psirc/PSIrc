@@ -7,15 +7,21 @@ from queue import Queue, Empty
 class ConnectionManager:
     """
     Class managing connections to the server.
-    attributes:
-        host - string, server ip address,
-        port - string, server port,
-        executor - ThreadPoolExecutor, thread pool executor for class
-    fields:
-        _running - bool, set True after start method,
-        _socket - server's socket,
-        _queue - Queue - queue of messages received from connected sockets,
-        _connection - set - set of connected sockets
+
+    :param host: server ip address,
+    :type host: `string`
+    :param port: server port,
+    :type port: `string`
+    :param executor: thread pool executor for class
+    :type executor: `ThreadPoolExecutor`
+    :field _running: set True after start method,
+    :type _running: `bool`
+    :field _socket: server's socket
+    :type _socket: `socket.socket`
+    :field _queue: queue of messages received from connected sockets
+    :type queue: `Queue`
+    :field _connection: set of connected sockets
+    :type _connections: `set`
     """
 
     def __init__(self, host: str, port: int, thread_pool: ThreadPoolExecutor) -> None:

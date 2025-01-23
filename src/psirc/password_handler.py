@@ -17,10 +17,11 @@ class PasswordHandler():
         else:
             return True
 
-    def _valid_password(self, address: str, password: str) -> bool:
+    def _valid_password(self, address: str, password: str | None) -> bool:
+        password = password if password else ''
         return not self._passwords['I'][address] or self._passwords['I'][address] == password
 
-    def valid_password(self, address: str, password: str) -> bool:
+    def valid_password(self, address: str, password: str | None) -> bool:
         hostname, address = address.split('@')
         addr_list = address.split('.')
 

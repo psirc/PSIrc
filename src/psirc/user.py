@@ -61,3 +61,13 @@ class ExternalUser(User):
     @property
     def hop_count(self) -> int:
         return self._hop_count
+
+
+class Server(User):
+    def __init__(self, nick: str, hop_count: int) -> None:
+        super().__init__(nick)
+        self._hop_count = hop_count
+
+    @property
+    def hop_count(self) -> int:
+        return self._hop_count
