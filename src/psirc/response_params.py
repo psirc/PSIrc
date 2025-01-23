@@ -28,11 +28,12 @@ CMD_PARAMS = {
     Command.PASS: ["password"],
     Command.NICK: ["nickname"],
     Command.USER: ["username", "hostname", "servername", "realname"],
-    Command.PRIVMSG: ["receiver", "trailing"],
+    Command.PRIVMSG: ["receiver", "trailing"],  # trailing = message
     Command.PING: ["receiver"],
     Command.PONG: ["receivedby"],
     Command.JOIN: ["channel"],
     Command.CAP: ["param", "spec"],
+    Command.SERVER: ["servername", "hopcount", "trailing"]  # trailing = info
 }
 
 CMD_MESSAGES = {
@@ -53,6 +54,7 @@ CMD_MESSAGES = {
     Command.ERR_NORECIPIENT: "No recipient given",
     Command.ERR_NOTEXTTOSEND: "No text to send",
     Command.ERR_PASSWDMISMATCH: "Password incorrect",
+    Command.ERR_NEEDMOREPARAMS: "More parameters needed!"
 }
 
 

@@ -15,7 +15,7 @@ class MessageParser:
         """Parse a command prefix into a Prefix type object
 
         :param prefix: The prefix string
-        :param type: ``str``
+        :type prefix: ``str``
         :return: A prefix type object if the prefix was valid
         :rtype: ``Prefix`` or ``None``
         """

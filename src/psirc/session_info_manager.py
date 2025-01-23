@@ -6,7 +6,7 @@ class SessionInfoManager:
     def __init__(self) -> None:
         self._socket_info: dict[socket.socket, SessionInfo] = {}
 
-    def add(self, client_socket: socket.socket, password: str) -> None:
+    def add(self, client_socket: socket.socket, password: str | None) -> None:
         self._socket_info[client_socket] = SessionInfo(password)
 
     def get_info(self, client_socket: socket.socket) -> SessionInfo | None:
