@@ -1,5 +1,6 @@
 import pytest
 from psirc.user_manager import UserManager, NickAlreadyInUse
+from psirc.user import LocalUser, ExternalUser
 
 
 def test_constructor():
@@ -12,19 +13,18 @@ def test_add_local_user():
     dummy_socket = "socket"
     manager.add_local("nickname", dummy_socket)
     user = manager.get_user("nickname")
-    assert user.is_local()
-    assert user.hop_count == 0
+    assert isinstance(user, LocalUser)
     assert user.nick == "nickname"
-    assert user.get_route() == "socket"
+    assert user.socket == "socket"
 
 
 def test_add_external():
     manager = UserManager()
     manager.add_external("nickname", 1, "server_nickname")
     user = manager.get_user("nickname")
-    assert not user.is_local()
+    assert isinstance(user, ExternalUser)
     assert user.hop_count == 1
-    assert user.get_route() == "server_nickname"
+    assert user.location == "server_nickname"
 
 
 def test_nickname_collisions():
