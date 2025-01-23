@@ -3,7 +3,7 @@ from psirc.defines.exceptions import NoSuchChannel
 from psirc.channel import Channel
 from psirc.message import Message
 from psirc.routing_manager import RoutingManager
-from psirc.user_manager import ClientManager
+from psirc.client_manager import ClientManager
 
 
 class ChannelManager:

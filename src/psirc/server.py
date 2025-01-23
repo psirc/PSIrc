@@ -5,7 +5,7 @@ from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
 from psirc.session_info import SessionInfo, SessionType
 from psirc.session_info_manager import SessionInfoManager
-from psirc.user_manager import ClientManager
+from psirc.client_manager import ClientManager
 from psirc.password_handler import PasswordHandler
 from psirc.channel_manager import ChannelManager
 
