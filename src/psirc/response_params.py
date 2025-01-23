@@ -52,6 +52,7 @@ CMD_MESSAGES = {
     Command.ERR_NOORIGIN: "No origin specified",
     Command.ERR_NORECIPIENT: "No recipient given",
     Command.ERR_NOTEXTTOSEND: "No text to send",
+    Command.ERR_PASSWDMISMATCH: "Password incorrect",
 }
 
 

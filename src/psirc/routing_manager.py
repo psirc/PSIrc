@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from psirc.message import Message
+from psirc.message import Message, Prefix
 from psirc.response_params import parametrize
 from psirc.user_manager import UserManager
 from psirc.user import LocalUser
@@ -44,6 +44,9 @@ class RoutingManager:
         external_users = []
         logging.info(f"Forwarding private message: {message}")
         for nickname in channel.users:
+            if nickname == message.prefix.sender:
+                continue
+
             user = user_manager.get_user(nickname)
             if isinstance(user, LocalUser):
                 user.socket.send(encoded_message)
