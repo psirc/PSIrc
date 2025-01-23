@@ -1,6 +1,6 @@
 import socket
 import threading
-from psirc.user import Client, LocalUser, ExternalUser, Server
+from psirc.client import Client, LocalUser, ExternalUser, Server
 from collections.abc import Sequence
 
 

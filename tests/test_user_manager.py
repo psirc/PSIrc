@@ -1,6 +1,6 @@
 import pytest
-from psirc.user_manager import ClientManager, NickAlreadyInUse
-from psirc.user import LocalUser, ExternalUser
+from psirc.client_manager import ClientManager, NickAlreadyInUse
+from psirc.client import LocalUser, ExternalUser
 
 
 def test_constructor():

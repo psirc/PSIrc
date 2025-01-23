@@ -3,8 +3,8 @@ import logging
 
 from psirc.message import Message
 from psirc.response_params import parametrize
-from psirc.user_manager import ClientManager
-from psirc.user import LocalUser
+from psirc.client_manager import ClientManager
+from psirc.client import LocalUser
 from psirc.channel import Channel
 from psirc.defines.responses import Command
 
@@ -24,9 +24,9 @@ class RoutingManager:
         RoutingManager.respond_client(client_socket, message_error)
 
     @staticmethod
-    def send_to_user(receiver_nick: str, message: Message, user_manager: ClientManager) -> None:
+    def send_to_user(receiver_nick: str, message: Message, client_manager: ClientManager) -> None:
         # for now only sends to local
-        receiver = user_manager.get_user(receiver_nick)
+        receiver = client_manager.get_user(receiver_nick)
         if not receiver:
             raise KeyError("Receiver not found")
         if isinstance(receiver, LocalUser):
@@ -38,16 +38,16 @@ class RoutingManager:
         return
 
     @staticmethod
-    def send_to_channel(channel: Channel, message: Message, user_manager: ClientManager) -> None:
+    def send_to_channel(channel: Channel, message: Message, client_manager: ClientManager) -> None:
         # for now only sends to local
         encoded_message = str(message).encode()
         external_users = []
         logging.info(f"Forwarding private message: {message}")
         for nickname in channel.users:
-            if nickname == message.prefix.sender:
+            if message.prefix and nickname == message.prefix.sender:
                 continue
 
-            user = user_manager.get_user(nickname)
+            user = client_manager.get_user(nickname)
             if isinstance(user, LocalUser):
                 user.socket.send(encoded_message)
             else:
