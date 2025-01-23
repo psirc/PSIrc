@@ -35,7 +35,7 @@ CMD_PARAMS = {
     Command.CAP: ["param", "spec"],
     Command.OPER: ["user", "password"],
     Command.CONNECT: ["target_server", "[port]", "[remote_server]"],
-    Command.SERVER: ["servername", "hopcount", "trailing"]
+    Command.SERVER: ["servername", "hopcount", "trailing"],
 }
 
 CMD_MESSAGES = {
@@ -68,14 +68,16 @@ def parametrize(command: Command, **kwargs: str) -> Params | None:
     params = {}
     if command in CMD_PARAMS:
         for param in CMD_PARAMS[command]:
-            if param.startswith('[') and param.endswith(']'):
+            if param.startswith("[") and param.endswith("]"):
                 param = param[1:-1]
-                params[param] = kwargs.get(param)
-                if not params[param]:
-                    continue
+                param_value = kwargs.get(param)
+                if param_value:
+                    params[param] = param_value
             else:
-                params[param] = kwargs.get(param)
-                if not params[param]:
+                param_value = kwargs.get(param)
+                if param_value:
+                    params[param] = param_value
+                else:
                     print(f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments")
                     return None
     if command in CMD_MESSAGES:
