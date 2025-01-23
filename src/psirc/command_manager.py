@@ -34,9 +34,9 @@ def handle_quit_command(server: IRCServer, client_socket: socket.socket, session
 
     if message.command is not Command.QUIT:
         raise ValueError("Implementation error: Wrong command type")
-    if session_info.type is SessionType.USER or session_info is None:
+    if session_info is None or session_info.type is SessionType.USER:
         server.remove_local_user(client_socket, session_info)
-    elif session_info.type is SessionType.SERVER:
+    elif session_info.type is SessionType.SERVER and message.prefix:
         server.remove_external_user(message.prefix.user)
     else:
         raise ValueError("Unhandled quit command error")
@@ -70,7 +70,7 @@ def handle_pass_command(server: IRCServer, client_socket: socket.socket, session
         raise ValueError("Implementation error: Wrong command type")
     try:
         if message.params:
-            server.register_local_connection(client_socket, session_info, message.params)
+            server.register_local_connection(client_socket, session_info, message.params["password"])
         else:
             # missing params
             raise ValueError("Missing params from message command PASS")
@@ -80,7 +80,7 @@ def handle_pass_command(server: IRCServer, client_socket: socket.socket, session
     # OK, no response to client
 
 
-def handle_nick_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> bool:
+def handle_nick_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
     """Handle NICK command.
 
     Command: NICK
@@ -113,6 +113,7 @@ def handle_nick_command(server: IRCServer, client_socket: socket.socket, session
         nickname = message.params["nickname"]
     else:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        return
 
     if not server.is_unique(nickname):
         RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
@@ -162,7 +163,7 @@ def handle_user_command(server: IRCServer, client_socket: socket.socket, session
             session_info.realname = message.params["realname"]
             address = f"{message.params['hostname']}@{message.params['servername']}"
         else:
-            return False
+            return
 
         if not server._password_handler.valid_password(address, session_info.password):
             logging.info(f"Incorrect password given for {session_info.username}: {session_info.password}")
@@ -186,14 +187,29 @@ def handle_user_command(server: IRCServer, client_socket: socket.socket, session
         raise NotImplementedError("Registering users from other servers not implemented")
 
 
-def handle_server_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> bool:
+def handle_server_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
     if message.command is not Command.SERVER:
         raise ValueError("Implementation error: Wrong command type")
-    # TODO : handle server registration
+
+    if not session_info:
+        logging.info("server registered without PASS, adding SessionInfo")
+        server.register_local_connection(client_socket, None, '')
+        session_info = server._sessions.get_info(client_socket)
+
+    if message.params and "nickname" in message.params:
+        nickname = message.params["nickname"]
+    else:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        return
+
+    if not server.is_unique(nickname):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
+
+    session_info.nickname = nickname
     raise NotImplementedError("SERVER command not implemented")
 
 
-def handle_privmsg_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> bool:
+def handle_privmsg_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
     if message.command is not Command.PRIVMSG:
         raise ValueError("Implementation error: Wrong command type")
 
@@ -229,7 +245,7 @@ def handle_privmsg_command(server: IRCServer, client_socket: socket.socket, sess
 def handle_ping_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
 
     if not session_info or not session_info.registered():
-        return False
+        return
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
@@ -239,6 +255,8 @@ def handle_ping_command(server: IRCServer, client_socket: socket.socket, session
 
 def handle_join_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
 
+    if not message.params or not session_info:
+        return
     channel_name = message.params["channel"]
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)

@@ -85,7 +85,7 @@ class ConnectionManager:
 
         self.disconnect_client(client_socket)
 
-    def get_message(self, blocking: bool = True, timeout: float | None = None) -> tuple[socket.socket, str]:
+    def get_message(self, blocking: bool = True, timeout: float | None = None) -> tuple[socket.socket, str] | None:
         """Get received message from a connected socket.
 
         :param blocking: block until new message is available

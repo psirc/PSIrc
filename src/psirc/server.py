@@ -71,7 +71,7 @@ class IRCServer:
         self._users.remove(client_nick)
         self._channels.quit(client_nick)
 
-    def remove_local_user(self, client_socket: socket.socket, session_info: SessionInfo) -> None:
+    def remove_local_user(self, client_socket: socket.socket, session_info: SessionInfo | None) -> bool:
         """Remove local user from server.
 
         Remove user from list of users, channels. Disconnects the user from server
@@ -84,6 +84,7 @@ class IRCServer:
             raise ValueError("Server need to quit using SQUIT command")
         self._users.remove(session_info.nickname)
         self._channels.quit(session_info.nickname)
+        return True
 
     def register_local_connection(self, client_socket: socket.socket, session_info: SessionInfo | None, password: str | None) -> None:
         """Register local connection.
