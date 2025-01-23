@@ -10,6 +10,7 @@ class IRCValidator:
     nick_regex = r"^[A-Za-z][A-Za-z0-9\-\[\]\\`^{}]{0,8}$"
     host_regex = r"^[A-Za-z][A-Za-z0-9-]{0,22}[A-Za-z0-9](?:\.[A-Za-z][A-Za-z0-9-]{0,21}[A-Za-z0-9])*$"
     channel_regex = r"^[#&][^\x00\x07\x0A\x0D ,:]{1,49}$"
+    user_regex = r"^\S+$"
 
     @classmethod
     def validate_nick(cls, nick: str) -> bool:
@@ -33,3 +34,7 @@ class IRCValidator:
     @classmethod
     def validate_channel(cls, channel: str) -> bool:
         return re.match(cls.channel_regex, channel) is not None
+
+    @classmethod
+    def validate_user(cls, user: str) -> bool:
+        return re.match(cls.user_regex, user) is not None

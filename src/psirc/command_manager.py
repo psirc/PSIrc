@@ -11,6 +11,19 @@ from psirc.irc_validator import IRCValidator
 from psirc.defines.exceptions import NoSuchChannel
 
 
+def handle_oper_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    """Handle Oper command.
+    ...
+    """  # TODO write doc
+    if message.command is not Command.OPER:
+        raise ValueError("Implementation error: Wrong command type")
+    # if session_info is not None and session_info.type is SessionType.USER
+    logging.info("in handle oper")
+    pass
+
+
 def handle_quit_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
@@ -306,4 +319,5 @@ CMD_FUNCTIONS = {
     Command.QUIT: handle_quit_command,
     Command.PING: handle_ping_command,
     Command.JOIN: handle_join_command,
+    Command.OPER: handle_oper_command,
 }

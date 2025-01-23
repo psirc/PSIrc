@@ -25,6 +25,7 @@ class SessionInfo:
         self.nickname = ""
         self.username = ""
         self.realname = ""
+        self.is_oper = False
         self.type = SessionType.UNKNOWN
 
     def registered(self) -> bool:
