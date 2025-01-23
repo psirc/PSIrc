@@ -1,7 +1,7 @@
 import socket
 import logging
 
-from psirc.message import Message, Prefix
+from psirc.message import Message
 from psirc.response_params import parametrize
 from psirc.user_manager import ClientManager
 from psirc.user import LocalUser
