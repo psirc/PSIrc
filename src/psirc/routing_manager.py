@@ -14,7 +14,7 @@ class RoutingManager:
         client_socket.send(str(response).encode())
 
     @staticmethod
-    def respond_client_error(client_socket, error_type: Command) -> None:
+    def respond_client_error(client_socket: socket.socket, error_type: Command) -> None:
         message_error = Message(
             prefix=None,
             command=error_type,
@@ -44,7 +44,7 @@ class RoutingManager:
         logging.info(f"Forwarding private message: {message}")
         for nickname in channel.users:
             user = user_manager.get_user(nickname)
-            if user.is_local():
+            if user and user.is_local():
                 user.get_route().send(encoded_message)
             else:
                 external_users.append(user)

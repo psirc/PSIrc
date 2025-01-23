@@ -3,8 +3,6 @@ import socket
 import importlib
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
-from psirc.message import Message, Params
-from psirc.defines.responses import Command
 from psirc.session_info import SessionInfo, SessionType
 from psirc.session_info_manager import SessionInfoManager
 from psirc.user_manager import UserManager
@@ -87,13 +85,13 @@ class IRCServer:
         self._users.remove(session_info.nickname)
         self._channels.quit(session_info.nickname)
 
-    def register_local_connection(self, client_socket: socket.socket, session_info: SessionInfo, password: str | None) -> None:
+    def register_local_connection(self, client_socket: socket.socket, session_info: SessionInfo | None, password: str | None) -> None:
         """Register local connection.
         """
         if session_info is not None:
             raise AlreadyRegistered("Client already registered")
         # password is checked later - now just add session_info
-        self._sessions.add(client_socket, password)
+        self._sessions.add(client_socket, password if password else '')
 
     def is_unique(self, nickname: str) -> bool:
         if nickname == self.nickname:
@@ -101,8 +99,6 @@ class IRCServer:
         if nickname in self._users.list_users():
             return False
     
-        #if nickname in self._servers.list_servers():
-        #    return False
         return True
 
     def register_local_user(self, client_socket: socket.socket, session_info: SessionInfo) -> None:

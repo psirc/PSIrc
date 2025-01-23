@@ -94,10 +94,7 @@ class MessageParser:
         params_list = params.split()
         params_list.append(trail) if trail else None
 
-        # print(f"PARAMS: {params_list}")
-        # print(f"CMD_PARAMS: {CMD_PARAMS[command]}")
         params_dict = {CMD_PARAMS[command][i]: param for i, param in enumerate(params_list)}
-        # print(f"Params dict: {params_dict}")
         return parametrize(command, **params_dict)
 
     @classmethod
@@ -122,8 +119,4 @@ class MessageParser:
             return None
 
         params = cls._parse_params(command, params, trailing)
-        # print(f"prefix: {prefix}")
-        # print(f"command: {command}")
-        # print(f"params: {params}")
-        # print(f"trailing: {trailing}")
         return Message(prefix=prefix, command=command, params=params)

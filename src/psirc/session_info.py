@@ -28,7 +28,7 @@ class SessionInfo:
         self.type = SessionType.UNKNOWN
 
     def registered(self) -> bool:
-        return self.nickname and self.type is not SessionType.UNKNOWN
+        return bool(self.nickname and self.type is not SessionType.UNKNOWN)
 
     def __str__(self) -> str:
         return f"Identity: nickname={self.nickname}, type={self.type}" + (
