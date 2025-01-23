@@ -139,5 +139,5 @@ class ClientManager:
         with self._lock:
             for user in self._users:
                 if isinstance(self._users[user], LocalUser):
-                    result.append(user)
+                    result.append(self._users[user])
         return result

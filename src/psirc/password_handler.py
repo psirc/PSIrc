@@ -28,10 +28,10 @@ class PasswordHandler:
     def valid_operator(self, user: str, password: str) -> bool:
         return user in self._oper_credentials.keys() and password == self._oper_credentials[user]
 
-    def _valid_password(self, address: str, password: str) -> bool:
+    def _valid_password(self, address: str, password: str | None) -> bool:
         return not self._passwords["I"][address] or self._passwords["I"][address] == password
 
-    def valid_password(self, address: str, password: str) -> bool:
+    def valid_password(self, address: str, password: str | None) -> bool:
         hostname, address = address.split("@")
         addr_list = address.split(".")
 
