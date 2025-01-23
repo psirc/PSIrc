@@ -1,3 +1,6 @@
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/psirc/PSIrc/format.yml?label=formatting)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/psirc/PSIrc/test.yml?label=tests)
+
 # Programowanie Sieciowe - PSIRC
 *Bartosz Nowak, Łukasz Suchołbiak, Wojciech Sarwiński*
 
