@@ -1,9 +1,6 @@
 import logging
 from psirc.defines.exceptions import NoSuchChannel
 from psirc.channel import Channel
-from psirc.message import Message
-from psirc.routing_manager import RoutingManager
-from psirc.client_manager import ClientManager
 
 
 class ChannelManager:
@@ -35,7 +32,7 @@ class ChannelManager:
             logging.info(f"NoSuchChanel: {channel_name}, creating...")
             self._create_channel(channel_name, nickname)
 
-    def quit(self, nickname: str) -> None:
+    def quit(self, _: str) -> None:
         # TODO: remove user from all channels
         pass
 
