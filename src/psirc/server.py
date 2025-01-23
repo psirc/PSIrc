@@ -111,3 +111,5 @@ class IRCServer:
     def register_server(self, session_info: SessionInfo) -> None:
         self._users.add_server(session_info.nickname, session_info.hops)
 
+    def get_local_users(self) -> list:
+        return self._users.get_local_users()
