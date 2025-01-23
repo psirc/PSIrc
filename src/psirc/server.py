@@ -65,7 +65,7 @@ class IRCServer:
             self._connection.stop()
 
     # TODO: HANDLE SERVER TO SERVER CONNECTIONS
-    def connect_to_server(self, hostname: str, port: str, password: str) -> None:
+    def connect_to_server(self, address: str, port: str) -> socket.socket | None:
         ...
         """Connect to server
 
@@ -78,8 +78,7 @@ class IRCServer:
         :return: Socket if connection was successfull None if connection failed
         :rtype: ``socket.socker | None``
         """
-        return self._connection.connect_to(address, port)
-
+        return self._connection.connect_to(address, int(port))
 
     def remove_external_user(self, client_nick: str) -> None:
         """Remove external user from server.
