@@ -1,6 +1,6 @@
 import socket
 import threading
-from psirc.user import User, LocalUser, ExternalUser
+from psirc.user import User, LocalUser, ExternalUser, Server
 from collections.abc import Sequence
 
 
@@ -56,6 +56,14 @@ class UserManager:
             if user_nick in self._users.keys():
                 raise NickAlreadyInUse(f'Nick "{user_nick}" in use')
             self._users[user_nick] = ExternalUser(user_nick, hop_count, server_name)
+
+    def add_server(self, server_nick: str, hop_count: int) -> None:
+        if hop_count < 1:
+            raise ValueError('Hop count of server has to be a positive integer')
+        with self._lock:
+            if server_nick in self._users.keys():
+                raise NickAlreadyInUse(f"Nickname '{server_nick}' is already in use!")
+            self._users[server_nick] = Server(server_nick, hop_count)
 
     def get_user(self, user_nick: str) -> User | None:
         """

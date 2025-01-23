@@ -6,11 +6,13 @@ from psirc.defines.responses import Command
 class Prefix:
     """
     Class representing a prefix for an IRC message
-    attributes:
-        sender - string, the sender of the message
-    fields:
-        user - string, recepient of the message (name)
-        host - string, recepient of the message (host)
+
+    :param sender: the sender of the message
+    :type sender: `string`
+    :field user: recepient of the message (name)
+    :type user: `string`
+    :field host: recepient of the message (host)
+    :type host: `string`
     """
 
     def __init__(self, sender: str, user: str = "", host: str = "") -> None:
