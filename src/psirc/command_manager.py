@@ -16,21 +16,46 @@ import psirc.command_helpers as helpers
 def handle_connect_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message
 ) -> None:
+
+    # TODO: check for oper privileges
+
     if not message.params or "target_server" not in message.params:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
     target_server = message.params["target_server"]
     port = message.params["port"] if message.params["port"] else str(server.port)
-    password = server.password_handler.get_c_password(target_server)
 
-    server.connect_to_server(target_server, port, password)
+    session_info.password = server.password_handler.get_c_password(target_server)
+    if not session_info.password:
+        # TODO: raise some error or log in console?
+        return
 
-    # TODO: Connect a socket to the remote server
+    server_socket = server.connect_to_server(target_server, port)
+    if not server_socket:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHSERVER)
+        return
 
     if "remote_server" in message.params:
         # TODO: Connect a remote server to another remote server
         ...
+
+    # Send PASS message
+    # TODO: change name of `respond_client` so it fits better here (or join these two calls into one)
+    RoutingManager.respond_client(
+        server_socket,
+        command=Command.PASS,
+        password=session_info.password
+    )
+
+    # Send SERVER message
+    RoutingManager.respond_client(
+        server_socket,
+        command=Command.SERVER,
+        servername=server.nickname,
+        hopcount='1',
+        trailing="Placeholder server message"
+    )
 
 
 def handle_oper_command(
