@@ -51,7 +51,7 @@ def test_parse_command(text, command):
     ("text", "params"),
     [
         (":sender.com JOIN #channel", {"channel": "#channel"}),
-        (":ojeju12 NICK newnick", {"nickname": "newnick", "hopcount": None}),
+        (":ojeju12 NICK newnick", {"nickname": "newnick"}),
         (
             "PRIVMSG #fishing :Going fishing today!",
             {"receiver": "#fishing", "trailing": "Going fishing today!"},
