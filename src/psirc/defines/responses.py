@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class Command(Enum):
+    # ----------- REPLIES ------------
     RPL_WELCOME = 1
     RPL_NONE = 300
     RPL_USERHOST = 302
@@ -22,7 +23,7 @@ class Command(Enum):
     RPL_NAMREPLY = 353
     RPL_YOUREOPER = 381
 
-    # Error responses
+    # ------------ ERRORS -------------
     ERR_NOSUCHNICK = 401
     ERR_NOSUCHSERVER = 402
     ERR_NOSUCHCHANNEL = 403
@@ -56,6 +57,7 @@ class Command(Enum):
     PONG = 1009
 
     QUIT = 1010
+    CONNECT = 1011
 
     CAP = 2000
 

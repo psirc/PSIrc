@@ -34,6 +34,8 @@ CMD_PARAMS = {
     Command.JOIN: ["channel"],
     Command.CAP: ["param", "spec"],
     Command.OPER: ["user", "password"],
+    Command.CONNECT: ["target_server", "[port]", "[remote_server]"],
+    Command.SERVER: ["servername", "hopcount", "trailing"]
 }
 
 CMD_MESSAGES = {

@@ -31,7 +31,7 @@ class PasswordHandler:
     def _valid_password(self, address: str, password: str | None) -> bool:
         return not self._passwords["I"][address] or self._passwords["I"][address] == password
 
-    def valid_password(self, address: str, password: str | None) -> bool:
+    def valid_user_password(self, address: str, password: str | None) -> bool:
         hostname, address = address.split("@")
         addr_list = address.split(".")
 
@@ -53,6 +53,15 @@ class PasswordHandler:
                 if password_hostname == "*" or password_hostname == hostname:
                     return self._valid_password(password_address_full, password)
         return False
+
+    def valid_connect_password(self, hostname: str, password: str | None) -> bool:
+        return self._passwords['C'].get(hostname) == password
+
+    def valid_name_password(self, hostname: str, password: str | None) -> bool:
+        return self._passwords['N'].get(hostname) == password
+
+    def get_c_password(self, hostname: str) -> str:
+        return str(self._passwords['C'].get(hostname))
 
     def parse_config(self) -> None:
         with open(self._filename, "r") as fp:

@@ -13,6 +13,24 @@ from psirc.defines.exceptions import NoSuchChannel
 import psirc.command_helpers as helpers
 
 
+def handle_connect_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message) -> None:
+    if not message.params or "target_server" not in message.params:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        return
+
+    target_server = message.params["target_server"]
+    port = message.params["port"] if message.params["port"] else str(server.port)
+    password = server.password_handler.get_c_password(target_server)
+
+    server.connect_to_server(target_server, port, password)
+
+    # TODO: Connect a socket to the remote server
+
+    if "remote_server" in message.params:
+        # TODO: Connect a remote server to another remote server
+        ...
+
+
 def handle_oper_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
@@ -199,7 +217,7 @@ def handle_user_command(
         else:
             return
 
-        if not server.password_handler.valid_password(address, session_info.password):
+        if not server.password_handler.valid_user_password(address, session_info.password):
             logging.info(f"Incorrect password given for {session_info.username}: {session_info.password}")
             RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
             server.remove_local_user(client_socket, session_info)
@@ -265,7 +283,7 @@ def handle_server_command(
         client_socket,
         command=Command.SERVER,
         servername=server.nickname,
-        hopcout=hop_count,
+        hopcount=hop_count,
         trailing="Server desc placeholder"
     )
     helpers.send_local_user_nicks(client_socket, server, hop_count)
