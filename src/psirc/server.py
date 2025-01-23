@@ -18,12 +18,12 @@ class AlreadyRegistered(Exception):
 
 class IRCServer:
     def __init__(
-        self, nickname: str, host: str, port: int, max_workers: int = 10, *, password_file: str = "psirc.conf"
+        self, nickname: str, host: str, port: int, max_workers: int = 10, *, config_file: str = "psirc.conf"
     ) -> None:
         self.running = False
         self.nickname = nickname
+        self.password_handler = PasswordHandler(config_file)
         self._thread_executor = ThreadPoolExecutor(max_workers)
-        self._password_handler = PasswordHandler(password_file)
         self._connection = ConnectionManager(host, port, self._thread_executor)
         self._sessions = SessionInfoManager()
         self._users = ClientManager()
@@ -31,10 +31,10 @@ class IRCServer:
         self._commands = importlib.import_module("psirc.command_manager").CMD_FUNCTIONS
 
     def start(self) -> None:
-        self._password_handler.parse_config()
+        self.password_handler.parse_config()
         self.running = True
         self._connection.start()
-        
+
         try:
             while self.running:
                 result = self._connection.get_message(timeout=1)
@@ -86,30 +86,29 @@ class IRCServer:
         self._channels.quit(session_info.nickname)
         return True
 
-    def register_local_connection(self, client_socket: socket.socket, session_info: SessionInfo | None, password: str | None) -> None:
-        """Register local connection.
-        """
+    def register_local_connection(
+        self, client_socket: socket.socket, session_info: SessionInfo | None, password: str | None
+    ) -> None:
+        """Register local connection."""
         if session_info is not None:
             raise AlreadyRegistered("Client already registered")
         # password is checked later - now just add session_info
-        self._sessions.add(client_socket, password if password else '')
+        self._sessions.add(client_socket, password if password else "")
 
     def is_unique(self, nickname: str) -> bool:
         if nickname == self.nickname:
             return False
         if nickname in self._users.list_users():
             return False
-    
+
         return True
 
     def register_local_user(self, client_socket: socket.socket, session_info: SessionInfo) -> None:
-        """Register local user.
-
-        """
+        """Register local user."""
         self._users.add_local(session_info.nickname, client_socket)
 
     def register_server(self, session_info: SessionInfo) -> None:
         self._users.add_server(session_info.nickname, session_info.hops)
-
+        
     def get_local_users(self) -> list:
         return self._users.get_local_users()

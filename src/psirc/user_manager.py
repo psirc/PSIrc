@@ -60,7 +60,7 @@ class ClientManager:
 
     def add_server(self, server_nick: str, hop_count: int) -> None:
         if hop_count < 1:
-            raise ValueError('Hop count of server has to be a positive integer')
+            raise ValueError("Hop count of server has to be a positive integer")
         with self._lock:
             if server_nick in self._servers.keys():
                 raise NickAlreadyInUse(f"Nickname '{server_nick}' is already in use!")
@@ -111,12 +111,28 @@ class ClientManager:
         """
         with self._lock:
             disconnected_users = [
-                user for user in self._users.values()
+                user
+                for user in self._users.values()
                 if isinstance(user, ExternalUser) and user.location == server_nickname
             ]
             for user in disconnected_users:
                 self._users.pop(user.nick)
             return disconnected_users
+
+    def add_oper_privileges(self, user_nick: str) -> None:
+        with self._lock:
+            if user_nick not in self._users.keys():
+                raise NoSuchNick()
+
+            user = self._users[user_nick]
+            if isinstance(user, LocalUser):
+                user.is_oper = True
+
+    def has_oper_privileges(self, user_nick: str) -> bool:
+        with self._lock:
+            if user_nick in self._users.keys() and isinstance(self._users["user_nick"], LocalUser):
+                return True
+            return False
 
     def get_local_users(self) -> list[LocalUser]:
         result = []
@@ -125,5 +141,3 @@ class ClientManager:
                 if isinstance(self._users[user], LocalUser):
                     result.append(user)
         return result
-
-

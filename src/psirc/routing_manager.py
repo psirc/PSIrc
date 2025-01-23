@@ -44,6 +44,9 @@ class RoutingManager:
         external_users = []
         logging.info(f"Forwarding private message: {message}")
         for nickname in channel.users:
+            if nickname == message.prefix.sender:
+                continue
+
             user = user_manager.get_user(nickname)
             if isinstance(user, LocalUser):
                 user.socket.send(encoded_message)

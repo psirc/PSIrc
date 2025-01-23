@@ -28,12 +28,12 @@ CMD_PARAMS = {
     Command.PASS: ["password"],
     Command.NICK: ["nickname", "[hopcount]"],
     Command.USER: ["username", "hostname", "servername", "realname"],
-    Command.PRIVMSG: ["receiver", "trailing"],  # trailing = message
+    Command.PRIVMSG: ["receiver", "trailing"],
     Command.PING: ["receiver"],
     Command.PONG: ["receivedby"],
     Command.JOIN: ["channel"],
     Command.CAP: ["param", "spec"],
-    Command.SERVER: ["servername", "hopcount", "trailing"]  # trailing = info
+    Command.OPER: ["user", "password"],
 }
 
 CMD_MESSAGES = {
@@ -42,6 +42,7 @@ CMD_MESSAGES = {
     Command.RPL_WHOISOPERATOR: "Is a server Operator",
     Command.RPL_WHOISIDLE: "seconds idle",
     Command.RPL_ENDOFWHOIS: "end of /WHOIS list",
+    Command.RPL_YOUREOPER: "You are now an IRC operator",
     Command.ERR_NOSUCHNICK: "No such nick/channel",
     Command.ERR_NOSUCHSERVER: "No such server",
     Command.ERR_NOSUCHCHANNEL: "No such channel",
@@ -53,7 +54,8 @@ CMD_MESSAGES = {
     Command.ERR_NOORIGIN: "No origin specified",
     Command.ERR_NORECIPIENT: "No recipient given",
     Command.ERR_NOTEXTTOSEND: "No text to send",
-    Command.ERR_NEEDMOREPARAMS: "More parameters needed!"
+    Command.ERR_PASSWDMISMATCH: "Password incorrect",
+    Command.ERR_NEEDMOREPARAMS: "Not enough parameters",
 }
 
 

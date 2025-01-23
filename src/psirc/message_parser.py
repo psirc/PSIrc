@@ -117,6 +117,5 @@ class MessageParser:
         command = cls._valid_command(command)
         if not command:
             return None
-
         params = cls._parse_params(command, params, trailing)
         return Message(prefix=prefix, command=command, params=params)

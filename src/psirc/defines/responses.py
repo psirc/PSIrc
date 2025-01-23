@@ -20,6 +20,7 @@ class Command(Enum):
     RPL_WHOISCHANNELS = 319
     RPL_TOPIC = 332
     RPL_NAMREPLY = 353
+    RPL_YOUREOPER = 381
 
     # Error responses
     ERR_NOSUCHNICK = 401
