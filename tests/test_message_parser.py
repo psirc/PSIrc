@@ -51,7 +51,7 @@ def test_parse_command(text, command):
     ("text", "params"),
     [
         (":sender.com JOIN #channel", {"channel": "#channel"}),
-        (":ojeju12 NICK newnick", {"nickname": "newnick"}),
+        (":ojeju12 NICK newnick", {"nickname": "newnick", "hopcount": None}),
         (
             "PRIVMSG #fishing :Going fishing today!",
             {"receiver": "#fishing", "trailing": "Going fishing today!"},
@@ -68,4 +68,5 @@ def test_parse_params(text, params):
     msg = MessageParser.parse_message(text)
     assert isinstance(msg, Message)
     assert isinstance(msg.params, Params)
+    print(msg.params.params)
     assert params == msg.params.params
