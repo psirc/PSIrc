@@ -10,6 +10,8 @@ from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
 from psirc.defines.exceptions import NoSuchChannel
 
+import psirc.command_helpers as helpers
+
 
 def handle_quit_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:
     '''Handle QUIT command.
@@ -232,8 +234,8 @@ def handle_server_command(server: IRCServer, client_socket: socket.socket, sessi
         command=Command.SERVER,
         params=parametrize(Command.SERVER, servername=server.nickname, hopcount=hop_count, trailing="Serwer CSSetti!")
     )
-
     RoutingManager.respond_client(client_socket, reply_server)
+    helpers.send_local_user_nicks(client_socket, server, hop_count)
 
 
 def handle_privmsg_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message) -> None:

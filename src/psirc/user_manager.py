@@ -116,3 +116,13 @@ class UserManager:
             for user in disconnected_users:
                 self._users.pop(user.nick)
             return disconnected_users
+
+    def get_local_users(self) -> list[LocalUser]:
+        result = []
+        with self._lock:
+            for user in self._users:
+                if isinstance(self._users[user], LocalUser):
+                    result.append(user)
+        return result
+
+
