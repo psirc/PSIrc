@@ -121,6 +121,7 @@ def handle_pass_command(
             server.register_local_connection(client_socket, session_info, message.params["password"])
         else:
             # missing params
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
             raise ValueError("Missing params from message command PASS")
         # OK, no response to client
     except AlreadyRegistered:
