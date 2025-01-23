@@ -21,6 +21,7 @@ class IRCServer:
         self, nickname: str, host: str, port: int, max_workers: int = 10, *, config_file: str = "psirc.conf"
     ) -> None:
         self.running = False
+        self.port = port
         self.nickname = nickname
         self.password_handler = PasswordHandler(config_file)
         self._thread_executor = ThreadPoolExecutor(max_workers)
@@ -62,6 +63,10 @@ class IRCServer:
             logging.error(f"Aborting! Unhandled error:\n{e}")
         finally:
             self._connection.stop()
+
+    # TODO: HANDLE SERVER TO SERVER CONNECTIONS
+    def connect_to_server(self, hostname: str, port: str, password: str) -> None:
+        ...
 
     def remove_external_user(self, client_nick: str) -> None:
         """Remove external user from server.
@@ -110,5 +115,5 @@ class IRCServer:
     def register_server(self, session_info: SessionInfo) -> None:
         self._users.add_server(session_info.nickname, session_info.hops)
         
-    def get_local_users(self) -> list:
+    def get_local_users(self) -> list[str]:
         return self._users.get_local_users()

@@ -134,10 +134,10 @@ class ClientManager:
                 return True
             return False
 
-    def get_local_users(self) -> list[LocalUser]:
+    def get_local_users(self) -> list[str]:
         result = []
         with self._lock:
             for user in self._users:
                 if isinstance(self._users[user], LocalUser):
-                    result.append(self._users[user])
+                    result.append(user)
         return result
