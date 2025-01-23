@@ -5,7 +5,7 @@ from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
 from psirc.session_info import SessionInfo, SessionType
 from psirc.session_info_manager import SessionInfoManager
-from psirc.user_manager import UserManager
+from psirc.user_manager import ClientManager
 from psirc.password_handler import PasswordHandler
 from psirc.channel_manager import ChannelManager
 
@@ -26,7 +26,7 @@ class IRCServer:
         self._password_handler = PasswordHandler(password_file)
         self._connection = ConnectionManager(host, port, self._thread_executor)
         self._sessions = SessionInfoManager()
-        self._users = UserManager()
+        self._users = ClientManager()
         self._channels = ChannelManager()
         self._commands = importlib.import_module("psirc.command_manager").CMD_FUNCTIONS
 
