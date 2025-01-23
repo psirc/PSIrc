@@ -1,11 +1,11 @@
 import socket
 
 
-class User:
+class Client:
     """
-    Class representing a base user
+    Class representing a base client (user or server)
 
-    :param nick: the nickname of user
+    :param nick: the nickname of client
     :type nick: ``str``
     """
 
@@ -17,7 +17,7 @@ class User:
         return self._nick
 
 
-class LocalUser(User):
+class LocalUser(Client):
     """
     Class representing a local server user
 
@@ -38,7 +38,7 @@ class LocalUser(User):
 
 
 # TODO: Possibly change location and hop_count into a list with each hop (or even just next hop?)
-class ExternalUser(User):
+class ExternalUser(Client):
     """
     Class representing a local server user
 
@@ -64,7 +64,7 @@ class ExternalUser(User):
         return self._hop_count
 
 
-class Server(User):
+class Server(Client):
     def __init__(self, nick: str, hop_count: int) -> None:
         super().__init__(nick)
         self._hop_count = hop_count

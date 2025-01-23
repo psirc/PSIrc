@@ -1,6 +1,6 @@
 import socket
 import threading
-from psirc.user import User, LocalUser, ExternalUser, Server
+from psirc.user import Client, LocalUser, ExternalUser, Server
 from collections.abc import Sequence
 
 
@@ -12,13 +12,14 @@ class NoSuchNick(Exception):
     pass
 
 
-class UserManager:
+class ClientManager:
     """
     Manages the sockets connected to current server, including user and server.
     """
 
     def __init__(self) -> None:
-        self._users: dict[str, User] = {}
+        self._users: dict[str, LocalUser | ExternalUser] = {}
+        self._servers: dict[str, Server] = {}
         self._lock = threading.Lock()
 
     def add_local(self, user_nick: str, user_socket: socket.socket) -> None:
@@ -61,11 +62,11 @@ class UserManager:
         if hop_count < 1:
             raise ValueError("Hop count of server has to be a positive integer")
         with self._lock:
-            if server_nick in self._users.keys():
+            if server_nick in self._servers.keys():
                 raise NickAlreadyInUse(f"Nickname '{server_nick}' is already in use!")
-            self._users[server_nick] = Server(server_nick, hop_count)
+            self._servers[server_nick] = Server(server_nick, hop_count)
 
-    def get_user(self, user_nick: str) -> User | None:
+    def get_user(self, user_nick: str) -> Client | None:
         """
         Retrieve User object for a user.
 
@@ -99,7 +100,7 @@ class UserManager:
         with self._lock:
             self._users.pop(user_nick, None)
 
-    def remove_from_server(self, server_nickname: str) -> Sequence[User]:  # Sequence is used for derived user types
+    def remove_from_server(self, server_nickname: str) -> Sequence[Client]:  # Sequence is used for derived client types
         """
         Remove all users socket from
 
@@ -132,3 +133,11 @@ class UserManager:
             if user_nick in self._users.keys() and isinstance(self._users["user_nick"], LocalUser):
                 return True
             return False
+
+    def get_local_users(self) -> list[LocalUser]:
+        result = []
+        with self._lock:
+            for user in self._users:
+                if isinstance(self._users[user], LocalUser):
+                    result.append(user)
+        return result

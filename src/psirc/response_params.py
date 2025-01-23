@@ -26,7 +26,7 @@ CMD_PARAMS = {
     Command.ERR_WASNOSUCHNICK: ["nickname"],
     Command.ERR_TOOMANYTARGETS: ["target"],
     Command.PASS: ["password"],
-    Command.NICK: ["nickname"],
+    Command.NICK: ["nickname", "[hopcount]"],
     Command.USER: ["username", "hostname", "servername", "realname"],
     Command.PRIVMSG: ["receiver", "trailing"],
     Command.PING: ["receiver"],
@@ -66,11 +66,16 @@ def parametrize(command: Command, **kwargs: str) -> Params | None:
     params = {}
     if command in CMD_PARAMS:
         for param in CMD_PARAMS[command]:
-            try:
-                params[param] = kwargs[param]
-            except KeyError:
-                print(f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments")
-                return None
+            if param.startswith('[') and param.endswith(']'):
+                param = param[1:-1]
+                params[param] = kwargs.get(param)
+                if not params[param]:
+                    continue
+            else:
+                params[param] = kwargs.get(param)
+                if not params[param]:
+                    print(f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments")
+                    return None
     if command in CMD_MESSAGES:
         params["response"] = f":{CMD_MESSAGES[command]}"
 

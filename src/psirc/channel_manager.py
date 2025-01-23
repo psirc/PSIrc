@@ -3,7 +3,7 @@ from psirc.defines.exceptions import NoSuchChannel
 from psirc.channel import Channel
 from psirc.message import Message
 from psirc.routing_manager import RoutingManager
-from psirc.user_manager import UserManager
+from psirc.user_manager import ClientManager
 
 
 class ChannelManager:
@@ -16,7 +16,7 @@ class ChannelManager:
         self.channels: dict[str, Channel] = {}
 
     def forward_message(
-        self, session_manager: UserManager, nickname: str, channel_name: str, message: Message
+        self, session_manager: ClientManager, nickname: str, channel_name: str, message: Message
     ) -> None:
         """Delegate PRIVMSG handling to the channel
 

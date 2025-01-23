@@ -1,15 +1,15 @@
 import pytest
-from psirc.user_manager import UserManager, NickAlreadyInUse
+from psirc.user_manager import ClientManager, NickAlreadyInUse
 from psirc.user import LocalUser, ExternalUser
 
 
 def test_constructor():
-    manager = UserManager()
+    manager = ClientManager()
     assert len(manager.list_users()) == 0
 
 
 def test_add_local_user():
-    manager = UserManager()
+    manager = ClientManager()
     dummy_socket = "socket"
     manager.add_local("nickname", dummy_socket)
     user = manager.get_user("nickname")
@@ -19,7 +19,7 @@ def test_add_local_user():
 
 
 def test_add_external():
-    manager = UserManager()
+    manager = ClientManager()
     manager.add_external("nickname", 1, "server_nickname")
     user = manager.get_user("nickname")
     assert isinstance(user, ExternalUser)
@@ -28,20 +28,20 @@ def test_add_external():
 
 
 def test_nickname_collisions():
-    manager = UserManager()
+    manager = ClientManager()
     manager.add_external("nickname", 1, "server")
     with pytest.raises(NickAlreadyInUse):
         manager.add_local("nickname", "socket")
 
 
 def test_external_hop_count_non_positive():
-    manager = UserManager()
+    manager = ClientManager()
     with pytest.raises(ValueError):
         manager.add_external("nickname", 0, "server")
 
 
 def test_remove_from_server():
-    manager = UserManager()
+    manager = ClientManager()
     manager.add_local("nickname", "socket")
     manager.add_external("nickname1", 1, "server_nickname")
     manager.add_external("nickname2", 1, "server_nickname")
