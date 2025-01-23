@@ -113,3 +113,23 @@ class ConnectionManager:
         self._socket.close()
         while self._connections:
             self._connections.pop().close()
+
+    def connect_to(self, address: str, port: int) -> socket.socket | None:
+        try:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.settimeout(5.0)
+            client_socket.connect((address, port))
+            logging.info(f"ConnectionManager: Connected to {address}:{port}")
+
+            client_socket.settimeout(None)
+            self._connections.add(client_socket)
+
+            self.executor.submit(self._handle_connection, client_socket, f"{address}:{port}")
+            return client_socket
+        except socket.timeout:
+            logging.warning(f"ConnectionManager: Connection to {address}:{port} timed out")
+        except socket.error as e:
+            logging.warning(f"ConnectionManager: Connection to {address}:{port}  failed: {e}")
+        except Exception as e:
+            logging.error(f"ConnectionManager: Unexpected error when connecting to {address}:{port}: {e}")
+        return None

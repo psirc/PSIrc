@@ -65,8 +65,20 @@ class IRCServer:
             self._connection.stop()
 
     # TODO: HANDLE SERVER TO SERVER CONNECTIONS
-    def connect_to_server(self, hostname: str, port: str, password: str) -> None:
+    def connect_to_server(self, address: str, port: str) -> socket.socket | None:
         ...
+        """Connect to server
+
+        Used to connect current server to other psirc servers.
+
+        :param address: address to connect to
+        :type address: ``str``
+        :param port: port of the address to connect to
+        :type port: ``int``
+        :return: Socket if connection was successfull None if connection failed
+        :rtype: ``socket.socker | None``
+        """
+        return self._connection.connect_to(address, int(port))
 
     def remove_external_user(self, client_nick: str) -> None:
         """Remove external user from server.
@@ -114,6 +126,6 @@ class IRCServer:
 
     def register_server(self, session_info: SessionInfo) -> None:
         self._users.add_server(session_info.nickname, session_info.hops)
-        
+
     def get_local_users(self) -> list[str]:
         return self._users.get_local_users()

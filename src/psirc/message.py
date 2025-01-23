@@ -40,7 +40,6 @@ class Prefix:
         )
 
 
-# TODO: find a way to better represent params in code
 class Params:
     def __init__(self, params: dict[str, str] | None = None) -> None:
         self.params = params if params else {}
