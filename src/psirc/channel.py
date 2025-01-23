@@ -11,7 +11,7 @@ class Channel:
         self.name = name
         self.chanops = {chanop_nickname}
         self.users = {chanop_nickname}
-        self.banned_users = {}
+        self.banned_users: set[str] = set()
         self.key = ""
 
     def join(self, nickname: str, key: str = "") -> None:

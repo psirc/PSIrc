@@ -15,22 +15,6 @@ class ChannelManager:
     def __init__(self) -> None:
         self.channels: dict[str, Channel] = {}
 
-    def forward_message(
-        self, session_manager: ClientManager, nickname: str, channel_name: str, message: Message
-    ) -> None:
-        """Delegate PRIVMSG handling to the channel
-
-        :param channel_name: name of the channet to which the message is sent
-        :type channel_name: ``str``
-        :param message: message which is being forwarded
-        :type message: ``Message``
-        :raises: NoSuchChannel: if channel with declared name does not exist
-        :return: None
-        :rtype: None
-        """
-        channel = self.get_channel(channel_name)
-        RoutingManager.send_to_channel(channel, nickname, message, session_manager)
-
     def join(self, channel_name: str, nickname: str, key: str = "") -> None:
         """Handle/delegate JOIN - join the channel
         If channel of declared name doesnt exits, create one
@@ -51,7 +35,7 @@ class ChannelManager:
             logging.info(f"NoSuchChanel: {channel_name}, creating...")
             self._create_channel(channel_name, nickname)
 
-    def quit(self, nickname: str)  -> None:
+    def quit(self, nickname: str) -> None:
         # TODO: remove user from all channels
         pass
 
@@ -91,4 +75,3 @@ class ChannelManager:
 
     def _create_channel(self, channel_name: str, nickname: str) -> None:
         self.channels[channel_name] = Channel(channel_name, nickname)
-        return True
