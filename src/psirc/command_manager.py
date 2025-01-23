@@ -13,7 +13,9 @@ from psirc.defines.exceptions import NoSuchChannel
 import psirc.command_helpers as helpers
 
 
-def handle_connect_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message) -> None:
+def handle_connect_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message
+) -> None:
     if not message.params or "target_server" not in message.params:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
@@ -121,6 +123,7 @@ def handle_pass_command(
             server.register_local_connection(client_socket, session_info, message.params["password"])
         else:
             # missing params
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
             raise ValueError("Missing params from message command PASS")
         # OK, no response to client
     except AlreadyRegistered:
@@ -158,6 +161,8 @@ def handle_nick_command(
         logging.info("client connecting without PASS, adding SessionInfo")
         server.register_local_connection(client_socket, None, "")
         session_info = server._sessions.get_info(client_socket)
+        if not session_info:
+            raise ValueError("Unexpectedly didnt get session info")
 
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]
@@ -209,12 +214,13 @@ def handle_user_command(
         if not session_info.nickname:
             RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
             return
-        session_info.type = SessionType.USER
         if message.params:
             session_info.username = message.params["username"]
             session_info.realname = message.params["realname"]
             address = f"{message.params['hostname']}@{message.params['servername']}"
+            session_info.type = SessionType.USER
         else:
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
             return
 
         if not server.password_handler.valid_user_password(address, session_info.password):
@@ -226,11 +232,7 @@ def handle_user_command(
         server.register_local_user(client_socket, session_info)
         logging.info(f"Registered: {session_info}")
 
-        RoutingManager.respond_client(
-            client_socket,
-            command=Command.RPL_WELCOME,
-            nickname=session_info.nickname
-        )
+        RoutingManager.respond_client(client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname)
         # TODO: notify other servers of new user
     elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
@@ -284,7 +286,7 @@ def handle_server_command(
         command=Command.SERVER,
         servername=server.nickname,
         hopcount=hop_count,
-        trailing="Server desc placeholder"
+        trailing="Server desc placeholder",
     )
     helpers.send_local_user_nicks(client_socket, server, hop_count)
 
@@ -333,11 +335,7 @@ def handle_ping_command(
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
-    RoutingManager.respond_client(
-        client_socket,
-        command=Command.PONG,
-        receivedby=receiver
-    )
+    RoutingManager.respond_client(client_socket, command=Command.PONG, receivedby=receiver)
 
 
 def handle_join_command(

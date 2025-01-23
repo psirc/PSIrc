@@ -4,8 +4,8 @@ from psirc.irc_validator import IRCValidator
 class PasswordHandler:
     def __init__(self, filename: str) -> None:
         self._filename = filename
-        self._passwords = {"I": {}, "C": {}, "N": {}}
-        self._oper_credentials = dict()
+        self._passwords: dict[str, dict[str, str | None]] = {"I": {}, "C": {}, "N": {}}
+        self._oper_credentials: dict[str, str] = dict()
 
     @staticmethod
     def _valid_i_host(data: str) -> bool:

@@ -71,8 +71,8 @@ class ConnectionManager:
     def _handle_connection(self, client_socket: socket.socket, client_address: str) -> None:
         while self._running:
             try:
-                data = client_socket.recv(4096)
-                data_list = data.decode().splitlines(True)
+                data_recieved = client_socket.recv(4096)
+                data_list = data_recieved.decode().splitlines(True)
                 for data in data_list:
                     if data:
                         self._queue.put((client_socket, data))
