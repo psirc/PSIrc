@@ -58,6 +58,7 @@ CMD_MESSAGES = {
     Command.ERR_NOTEXTTOSEND: "No text to send",
     Command.ERR_PASSWDMISMATCH: "Password incorrect",
     Command.ERR_NEEDMOREPARAMS: "Not enough parameters",
+    Command.ERR_ALREADYREGISTRED: "You may not reregister",
 }
 
 

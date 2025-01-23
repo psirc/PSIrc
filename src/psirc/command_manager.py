@@ -13,7 +13,9 @@ from psirc.defines.exceptions import NoSuchChannel
 import psirc.command_helpers as helpers
 
 
-def handle_connect_command(server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message) -> None:
+def handle_connect_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message
+) -> None:
     if not message.params or "target_server" not in message.params:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
@@ -212,12 +214,13 @@ def handle_user_command(
         if not session_info.nickname:
             RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
             return
-        session_info.type = SessionType.USER
         if message.params:
             session_info.username = message.params["username"]
             session_info.realname = message.params["realname"]
             address = f"{message.params['hostname']}@{message.params['servername']}"
+            session_info.type = SessionType.USER
         else:
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
             return
 
         if not server.password_handler.valid_user_password(address, session_info.password):
@@ -283,7 +286,7 @@ def handle_server_command(
         command=Command.SERVER,
         servername=server.nickname,
         hopcount=hop_count,
-        trailing="Server desc placeholder"
+        trailing="Server desc placeholder",
     )
     helpers.send_local_user_nicks(client_socket, server, hop_count)
 
