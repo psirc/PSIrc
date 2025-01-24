@@ -21,4 +21,4 @@ def broadcast_server_to_neighbours(server: IRCServer, message: Message) -> None:
     for peer_socket in server_sessions:
         if server_sessions[peer_socket].nickname == message.prefix.sender:
             continue
-        RoutingManager.send_response(peer_socket, message)
+        RoutingManager.send(peer_socket, message)
