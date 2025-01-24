@@ -293,19 +293,27 @@ def handle_server_command(
         if not session_info:
             return
 
-    if session_info.type == SessionType.SERVER:
-        # already registered
-        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname)
-    elif session_info.type != SessionType.UNKNOWN:
-        raise ValueError("Received SERVER command from registered user!")
-
-    session_info.type = SessionType.SERVER
-
     if message.params and "servername" in message.params:
         nickname = message.params["servername"]
     else:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
         return
+
+    if session_info.type == SessionType.SERVER:
+        # we made the connection, the server responds with more info about itself
+        # OR we are getting info about another server on the network
+
+        # if server is responding with this to SERVER msg:
+        session_info.nickname = nickname
+        session_info.hops = int(message.params["hopcount"])
+        logging.info("Registered new server")
+        return
+
+        # TODO: Handle the other case (info about other server)
+    elif session_info.type != SessionType.UNKNOWN:
+        raise ValueError("Received SERVER command from registered user!")
+
+    session_info.type = SessionType.SERVER
 
     if not server.is_unique(nickname):
         RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
