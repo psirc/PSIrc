@@ -16,20 +16,31 @@ class RoutingManager:
         client_socket.send(str(message).encode())
 
     @classmethod
-    def respond_client(cls, client_socket: socket.socket, prefix: Prefix | None = None, *, command: Command, **kwargs: str) -> None:
+    def respond_client(cls, client_socket: socket.socket, prefix: Prefix | None = None, *, command: Command, recepient: str | None, **kwargs: str) -> None:
+        if command.value >= 1000:
+            print("DEV: WARNING! IRC Command passed in numeric reply function")
         response = Message(
             prefix=prefix,
             command=command,
-            params=parametrize(command, **kwargs)
+            params=parametrize(command, **kwargs, recepient=recepient)
         )
         cls.send_response(client_socket, response)
 
     @classmethod
-    def respond_client_error(cls, client_socket: socket.socket, error_type: Command) -> None:
+    def send_command(cls, peer_socket: socket.socket, prefix: Prefix | None = None, *, command: Command, **kwargs: str) -> None:
+        message = Message(
+            prefix=prefix,
+            command=command,
+            params=parametrize(command, **kwargs)
+        )
+        cls.send_response(peer_socket, message)
+
+    @classmethod
+    def respond_client_error(cls, client_socket: socket.socket, error_type: Command, recepient: str = '*') -> None:
         message_error = Message(
             prefix=None,
             command=error_type,
-            params=parametrize(error_type),
+            params=parametrize(error_type, recepient=recepient),
         )
         cls.send_response(client_socket, message_error)
 

@@ -15,7 +15,6 @@ CMD_PARAMS = {
     Command.RPL_WHOISIDLE: ["nickname", "seconds_idle"],
     Command.RPL_ENDOFWHOIS: ["nickname"],
     Command.RPL_WHOISCHANNELS: ["nickname", "channel"],
-    Command.RPL_WELCOME: ["nickname"],
     Command.RPL_TOPIC: ["channel", "trailing"],
     Command.RPL_NAMREPLY: ["channel", "trailing"],
     Command.ERR_NOSUCHNICK: ["nickname"],
@@ -62,12 +61,18 @@ CMD_MESSAGES = {
 }
 
 
-def parametrize(command: Command, **kwargs: str) -> Params | None:
+def parametrize(command: Command, *, recepient: str | None = None, **kwargs: str) -> Params | None:
     """
-    Get a valid Params object for a given reply/error
+    Get a valid Params object for a given command/reply/error
     """
     params = {}
     if command in CMD_PARAMS:
+        # Numeric replies need a recepient
+        if command.value < 1000:
+            if not recepient:
+                print("Numeric commands require a 'recepient' parameter")
+                return None
+        # Other parameters
         for param in CMD_PARAMS[command]:
             if param.startswith("[") and param.endswith("]"):
                 param = param[1:-1]
@@ -84,4 +89,4 @@ def parametrize(command: Command, **kwargs: str) -> Params | None:
     if command in CMD_MESSAGES:
         params["response"] = f":{CMD_MESSAGES[command]}"
 
-    return Params(params)
+    return Params(params, recepient=recepient)

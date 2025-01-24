@@ -41,11 +41,12 @@ class Prefix:
 
 
 class Params:
-    def __init__(self, params: dict[str, str] | None = None) -> None:
+    def __init__(self, params: dict[str, str] | None = None, *, recepient: str | None = None) -> None:
         self.params = params if params else {}
+        self.recepient = recepient if recepient else ''  # used in numeric replies
 
     def __str__(self) -> str:
-        return " ".join((":" if key == "trailing" else "") + self[key] for key in self.params.keys() if self[key])
+        return self.recepient + ' = ' + " ".join((":" if key == "trailing" else "") + self[key] for key in self.params.keys() if self[key])
 
     def __getitem__(self, key: str) -> str:
         return self.params[key]

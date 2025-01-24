@@ -20,7 +20,7 @@ def handle_connect_command(
     # TODO: check for oper privileges
 
     if not message.params or "target_server" not in message.params:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
         return
 
     target_server = message.params["target_server"]
@@ -33,7 +33,7 @@ def handle_connect_command(
 
     server_socket = server.connect_to_server(target_server, port)
     if not server_socket:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHSERVER)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHSERVER, session_info.nickname)
         return
 
     if "remote_server" in message.params:
@@ -41,15 +41,14 @@ def handle_connect_command(
         ...
 
     # Send PASS message
-    # TODO: change name of `respond_client` so it fits better here (or join these two calls into one)
-    RoutingManager.respond_client(
+    RoutingManager.send_command(
         server_socket,
         command=Command.PASS,
         password=session_info.password
     )
 
     # Send SERVER message
-    RoutingManager.respond_client(
+    RoutingManager.send_command(
         server_socket,
         command=Command.SERVER,
         servername=server.nickname,
@@ -65,21 +64,20 @@ def handle_oper_command(
     ...
     """  # TODO write doc
     if not session_info:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED, '*')
         return
     if message.command is not Command.OPER:
         raise ValueError("Implementation error: Wrong command type")
     # if session_info is not None and session_info.type is SessionType.USER
     if not message.params or ("user" not in message.params or "password" not in message.params):
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
         return
 
     if server.password_handler.valid_operator(message.params["user"], message.params["password"]):
         server._users.add_oper_privileges(session_info.nickname)
-        message = Message(prefix=None, command=Command.RPL_YOUREOPER, params=parametrize(Command.RPL_YOUREOPER))
-        RoutingManager.respond_client(client_socket, command=Command.RPL_YOUREOPER)
+        RoutingManager.respond_client(client_socket, command=Command.RPL_YOUREOPER, recepient=session_info.nickname)
     else:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH, session_info.nickname)
 
 
 def handle_quit_command(
@@ -148,11 +146,11 @@ def handle_pass_command(
             server.register_local_connection(client_socket, session_info, message.params["password"])
         else:
             # missing params
-            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, '*')
             raise ValueError("Missing params from message command PASS")
         # OK, no response to client
     except AlreadyRegistered:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname if session_info else '*')
     # OK, no response to client
 
 
@@ -192,11 +190,11 @@ def handle_nick_command(
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]
     else:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, '*')
         return
 
     if not server.is_unique(nickname):
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION, '*')
 
     session_info.nickname = nickname
 
@@ -233,7 +231,7 @@ def handle_user_command(
 
     if session_info.type == SessionType.USER:
         # already registered
-        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname)
     elif session_info.type == SessionType.UNKNOWN:
         # register local user
         if not session_info.nickname:
@@ -245,19 +243,19 @@ def handle_user_command(
             address = f"{message.params['hostname']}@{message.params['servername']}"
             session_info.type = SessionType.USER
         else:
-            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
             return
 
         if not server.password_handler.valid_user_password(address, session_info.password):
             logging.info(f"Incorrect password given for {session_info.username}: {session_info.password}")
-            RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH)
+            RoutingManager.respond_client_error(client_socket, Command.ERR_PASSWDMISMATCH, session_info.nickname)
             server.remove_local_user(client_socket, session_info)
             return
 
         server.register_local_user(client_socket, session_info)
         logging.info(f"Registered: {session_info}")
 
-        RoutingManager.respond_client(client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname)
+        RoutingManager.respond_client(client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname, recepient=session_info.nickname)
         # TODO: notify other servers of new user
     elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
@@ -279,7 +277,7 @@ def handle_server_command(
 
     if session_info.type == SessionType.SERVER:
         # already registered
-        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname)
     elif session_info.type != SessionType.UNKNOWN:
         raise ValueError("Received SERVER command from registered user!")
 
@@ -291,14 +289,14 @@ def handle_server_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
         return
 
+    if not server.is_unique(nickname):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
+
     if message.params and "hopcount" in message.params:
         hop_count = message.params["hopcount"]
     else:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
         return
-
-    if not server.is_unique(nickname):
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION)
 
     session_info.nickname = nickname
     session_info.hops = int(hop_count)
@@ -306,7 +304,7 @@ def handle_server_command(
     server.register_server(session_info)
     logging.info(f"Registered: {session_info}")
 
-    RoutingManager.respond_client(
+    RoutingManager.send_command(
         client_socket,
         command=Command.SERVER,
         servername=server.nickname,
@@ -345,10 +343,10 @@ def handle_privmsg_command(
         else:
             RoutingManager.send_to_user(receiver, message_to_send, server._users)
     except NoSuchChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
         return
     except KeyError:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK, session_info.nickname)
 
 
 def handle_ping_command(
@@ -360,7 +358,7 @@ def handle_ping_command(
 
     receiver = message.params["receiver"] if message.params else ""  # this is us
 
-    RoutingManager.respond_client(client_socket, command=Command.PONG, receivedby=receiver)
+    RoutingManager.send_command(client_socket, command=Command.PONG, receivedby=receiver)
 
 
 def handle_join_command(
