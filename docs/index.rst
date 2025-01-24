@@ -8,6 +8,7 @@ PSIrc documentation
 
 This is a documentation for the PSIrc project.
 PSIrc is a simple IRC Server that supports:
+
 * Users
 * Operators
 * Channel operators
