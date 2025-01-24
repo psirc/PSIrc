@@ -22,25 +22,35 @@ def handle_connect_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
         return
 
+    # remote server connecting
+    if "remote_server" in message.params:
+        # TODO: Connect a remote server to another remote server
+        # Forward this message to server
+        ...
+
     target_server = message.params["target_server"]
     port = message.params["port"] if message.params["port"] else str(server.port)
 
-    session_info.password = server.password_handler.get_c_password(target_server)
-    if not session_info.password:
-        # TODO: raise some error or log in console?
-        return
-
+    # get server socket
     server_socket = server.connect_to_server(target_server, port)
     if not server_socket:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHSERVER, session_info.nickname)
         return
 
-    if "remote_server" in message.params:
-        # TODO: Connect a remote server to another remote server
-        ...
+    # create session
+    server.register_local_connection(server_socket, None, None)
+    server_session = server._sessions.get_info(client_socket)
+    if not server_session:
+        return
+
+    # set password
+    server_session.password = server.password_handler.get_c_password(target_server)
+    if not server_session.password:
+        # TODO: raise some error or log in console?
+        return
 
     # Send PASS message
-    RoutingManager.send_command(server_socket, command=Command.PASS, password=session_info.password)
+    RoutingManager.send_command(server_socket, command=Command.PASS, password=server_session.password)
 
     # Send SERVER message
     RoutingManager.send_command(
@@ -183,6 +193,9 @@ def handle_nick_command(
         session_info = server._sessions.get_info(client_socket)
         if not session_info:
             raise ValueError("Unexpectedly didnt get session info")
+
+    if session_info.type is SessionType.SERVER:
+        server.register_external_user(session_info.nickname, session_info)
 
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]

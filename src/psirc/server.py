@@ -104,13 +104,13 @@ class IRCServer:
         return True
 
     def register_local_connection(
-        self, client_socket: socket.socket, session_info: SessionInfo | None, password: str | None
+        self, peer_socket: socket.socket, session_info: SessionInfo | None, password: str | None
     ) -> None:
         """Register local connection."""
         if session_info is not None:
             raise AlreadyRegistered("Client already registered")
         # password is checked later - now just add session_info
-        self._sessions.add(client_socket, password if password else "")
+        self._sessions.add(peer_socket, password if password else "")
 
     def is_unique(self, nickname: str) -> bool:
         if nickname == self.nickname:
@@ -123,6 +123,9 @@ class IRCServer:
     def register_local_user(self, client_socket: socket.socket, session_info: SessionInfo) -> None:
         """Register local user."""
         self._users.add_local(session_info.nickname, client_socket)
+
+    def register_external_user(self, server_nickname: str, session_info: SessionInfo) -> None:
+        self._users.add_external(session_info.nickname, session_info.hops + 1, server_nickname)
 
     def register_server(self, session_info: SessionInfo) -> None:
         self._users.add_server(session_info.nickname, session_info.hops)
