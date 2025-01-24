@@ -101,8 +101,9 @@ def handle_oper_command(
 def handle_quit_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
-    '''Handle QUIT command.
-
+    """Handle QUIT command.
+    
+    Description:
     Command: QUIT
     Parameters: [<quit_message>]
 
@@ -119,7 +120,6 @@ def handle_quit_command(
     :type message: ``Message``
     :return: None
     """
-    '''
 
     if message.command is not Command.QUIT:
         raise ValueError("Implementation error: Wrong command type")
@@ -135,7 +135,7 @@ def handle_quit_command(
 def handle_pass_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
-    '''Try to handle PASS command.
+    """Try to handle PASS command.
 
     Command: PASS
     Parameters: <password>
@@ -155,7 +155,6 @@ def handle_pass_command(
     :return: True if message command is PASS, False otherwise
     :rtype: ``bool``
     """
-    '''
 
     if message.command is not Command.PASS:
         raise ValueError("Implementation error: Wrong command type")

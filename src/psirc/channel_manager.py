@@ -5,8 +5,9 @@ from psirc.channel import Channel
 
 class ChannelManager:
     """Class managing channels, and handling channel operations
-    attributes:
-        channels - dict[string, Channel], dict of existing channels
+
+    :param channels: dict of existing channels
+    :type channels: `dict[str, Channel]`
     """
 
     def __init__(self) -> None:
