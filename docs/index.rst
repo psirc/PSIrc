@@ -23,6 +23,7 @@ The server follows RFC 1459 and mostly works with IRC clients that support it as
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   Dokumentacja
    modules
+
 
