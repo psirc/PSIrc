@@ -117,40 +117,41 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
 
 Bloki funkcjonalne serwera
 
-- Blok Interfejsu Połączeń
+- Blok Interfejsu Połączeń (ConnectionManager)
     * Akceptuje i zarządza połączeniami serwera z klientem przy pomocy gniazd
     * Akceptuje i zarządza połączeniami serwera z serwerem przy pomocy gniazd
-    * Zarządza komunikacją z gniazdami
+    * Otwiera nowe połączenia z serwerem
     * Zapewnia wielowątkową obsługę gniazd
-- Blok Parsowania wiadomości
+    * Zapisuje otrzymane wiadomości w kolejce wiadomości
+- Blok Parsowania wiadomości (MessageParser)
     * Sprawdza poprawność wiadomości
-    * Przekierowuje wiadomości do odpowiednich bloków w odpowiednim formacie
-- Blok Uwierzytelniania
-    * Zarządza logowaniem użytkowników
-    * Zapewnia niepowtarzalność nazw użytkowników
-    * Potwierdza i zarządza listami uwierzytelniającymi
-    * Zapewnia bezpieczny dostęp do kanałów chronionych hasłem
-- Blok Menadżera Sesji
-    * Zarządza listą użytkowników połączonych z serwerem
-    * Zarządza asocjacją pomiędzy nazwą użykownia a gniazdem
-    * Zarządza asocjacją pomiędzy nazwą użykownia a innym serwerem
-    * Informuje inne bloki o rozłączeniu klienta
-- Blok Menadżera Serwerów
-    * Zarządza listą bezpośrednio połączonych serwerów IRC
-    * Zarządza listą serwerów IRC dostępnych pośrednio przez bezpośrednio połączone serwery IRC
-- Blok Menadżera Kanałów
+    * Przekształca ciąg znaków odebranych od serwera lub klienta w odpowiednią klasę
+- Blok Menadżera Klientów (ClientManager)
+    * Zarządza listą lokalnych użytkowników połączonych z serwerem
+    * Zarządza listą zewnętrznych użytkowników połączonych z serwerem
+    * Zarządza listą serwerów połączonych z serwerem
+    * Umożliwia uzyskanie informacji na temat typu klienta
+    * Umożliwia uzyskanie informacji na temat najbliższego połączenia do klienta
+- Blok Menadżera Kanałów (ChannelManager)
     * Zarządza listą kanałów
     * Zarządza właścicielem kanału
     * Zarządza opcjonalnym hasłem dostępu do kanału
     * Zarządza listą użytkowników połączonych do kanału
     * Umożliwia właścicielowi usunąć użytkownia z kanału
     * Potwierdza status użytkownika jako członka kanału
-- Blok Menadżera Przekierowań
+- Blok Menadżera Sesji (SessionInfoManager)
+    * Zarządza asocjacją informacji na temat sesji a gniazdem
+    * Pozwala stwierdzić typ klienta podłączonego pod gniazdo
+    * Pozwala stwierdzić nickname klienta podłączonego pod gniazdo
+- Blok Menadżera Przekierowań (RoutingManager)
     * Przekierowuje wiadomości pomiędzy klientami, kanałami i serwerami
     * Wysyła wiadomości prywatne do klientów połączonych do serwera
     * Wysyła wiadomości do wszystkich klientów znajdujących się na kanale połączonych do serwera
     * Przekierowuje wiadomości prywatne do odpowiednich połączonych bezpośrednio serwerów
     * Przekierowuje wiadomości wysłane na kanał do serwerów, do których połączeni są użytkownicy połączeni z danym kanałem
+- Blok Menadżera Haseł (PasswordHandler)
+    * Zarządza hasłami serwera
+    * Weryfikuje poprawność hasła podanego przez Klienta
 
 
 ![Diagram](diagram.png)
