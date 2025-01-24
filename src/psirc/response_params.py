@@ -16,7 +16,7 @@ CMD_PARAMS = {
     Command.RPL_ENDOFWHOIS: ["nickname"],
     Command.RPL_WHOISCHANNELS: ["nickname", "channel"],
     Command.RPL_TOPIC: ["channel", "trailing"],
-    Command.RPL_NAMREPLY: ["channel", "trailing"],
+    Command.RPL_NAMREPLY: ["symbol", "channel", "trailing"],
     Command.RPL_ENDOFNAMES: ["channel"],
     Command.ERR_NOSUCHNICK: ["nickname"],
     Command.ERR_NOSUCHCHANNEL: ["channel"],

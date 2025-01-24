@@ -40,11 +40,13 @@ class RoutingManager:
         cls.send_response(peer_socket, message)
 
     @classmethod
-    def respond_client_error(cls, client_socket: socket.socket, error_type: Command, recepient: str = "*") -> None:
+    def respond_client_error(
+        cls, client_socket: socket.socket, error_type: Command, recepient: str = "*", **kwargs: str
+    ) -> None:
         message_error = Message(
             prefix=None,
             command=error_type,
-            params=parametrize(error_type, recepient=recepient),
+            params=parametrize(error_type, recepient=recepient, **kwargs),
         )
         print(message_error)
         cls.send_response(client_socket, message_error)

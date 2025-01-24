@@ -87,3 +87,6 @@ class Channel:
 
     def names(self) -> str:
         return " ".join((("@" + nickname if nickname in self.chanops else "+" + nickname) for nickname in self.users))
+
+    def channel_symbol(self) -> str:
+        return "*" if self.key else "="

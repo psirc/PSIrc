@@ -367,16 +367,19 @@ def handle_join_command(
     if not message.params or not session_info:
         return
     channel_name = message.params["channel"]
+    print(channel_name)
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)
     # handle better namereply
     names = server._channels.get_names(channel_name)
+    symbol = server._channels.get_symbol(channel_name)
 
     topic = "No topic yet"  # TODO get channel topic instead of this
     RoutingManager.respond_client(
         client_socket,
         prefix=None,
         command=Command.RPL_TOPIC,
+        recepient=session_info.nickname,
         channel=channel_name,
         trailing=topic,
     )
@@ -384,6 +387,8 @@ def handle_join_command(
         client_socket,
         prefix=None,
         command=Command.RPL_NAMREPLY,
+        recepient=session_info.nickname,
+        symbol=symbol,
         channel=channel_name,
         trailing=names,
     )
@@ -406,6 +411,7 @@ def handle_names_command(
     channel_name = message.params["channel"]
     try:
         names = server._channels.get_names(channel_name)
+        symbol = server._channels.get_symbol(channel_name)
     except NoSuchChannel:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL)
 
@@ -413,11 +419,19 @@ def handle_names_command(
         client_socket,
         prefix=None,
         command=Command.RPL_NAMREPLY,
+        recepient=session_info.nickname,
         channel=channel_name,
+        symbol=symbol,
         trailing=names,
     )
 
-    RoutingManager.respond_client(client_socket, prefix=None, command=Command.RPL_ENDOFNAMES, channel=channel_name)
+    RoutingManager.respond_client(
+        client_socket,
+        prefix=None,
+        command=Command.RPL_ENDOFNAMES,
+        recepient=session_info.nickname,
+        channel=channel_name,
+    )
 
 
 def handle_part_command(
@@ -435,9 +449,13 @@ def handle_part_command(
     try:
         server._channels.part_from_channel(channel_name, session_info.nickname)
     except NoSuchChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, channel=channel_name)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
     except NotOnChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTONCHANNEL, channel=channel_name)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOTONCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
 
 
 def handle_kick_command(
@@ -457,14 +475,24 @@ def handle_kick_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
+    print(channel_name)
     try:
         server._channels.kick(channel_name, session_info.nickname, kicked_nick)
     except NoSuchChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, channel=channel_name)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
     except NotOnChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTONCHANNEL, channel=channel_name)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOTONCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
     except ChanopPrivIsNeeded:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_CHANOPRIVISNEEDED, channel=channel_name)
+        RoutingManager.respond_client_error(
+            client_socket,
+            Command.ERR_CHANOPRIVISNEEDED,
+            recepient=session_info.nickname,
+            channel=channel_name,
+        )
 
 
 CMD_FUNCTIONS = {
