@@ -59,6 +59,11 @@ class ChannelManager:
         channel.kick(nickname, kicked_nick)
         self._check_for_cleanup(channel_name)
 
+    def part_from_channel(self, channel_name: str, nickname: str) -> None:
+        channel = self.get_channel(channel_name)
+        channel.part(nickname)
+        self._check_for_cleanup(channel_name)
+
     def get_names(self, channel_name: str) -> str:
         channel = self.get_channel(channel_name)
         return channel.names()

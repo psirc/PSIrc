@@ -8,7 +8,7 @@ from psirc.session_info import SessionInfo, SessionType
 from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
-from psirc.defines.exceptions import NoSuchChannel, NoSuchNick
+from psirc.defines.exceptions import NoSuchChannel, NoSuchNick, NotOnChannel
 
 import psirc.command_helpers as helpers
 
@@ -420,6 +420,26 @@ def handle_names_command(
     RoutingManager.respond_client(client_socket, prefix=None, command=Command.RPL_ENDOFNAMES, channel=channel_name)
 
 
+def handle_part_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    if message.command is not Command.PART:
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        raise ValueError("Operation not allowed for unknown")
+
+    if not message.params or not (channel_name := message.params["channel"]):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        return
+    try:
+        server._channels.part_from_channel(channel_name, session_info.nickname)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, channel=channel_name)
+    except NotOnChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTONCHANNEL, channel=channel_name)
+
+
 CMD_FUNCTIONS = {
     Command.PASS: handle_pass_command,
     Command.NICK: handle_nick_command,
@@ -431,4 +451,5 @@ CMD_FUNCTIONS = {
     Command.JOIN: handle_join_command,
     Command.OPER: handle_oper_command,
     Command.NAMES: handle_names_command,
+    Command.PART: handle_part_command,
 }

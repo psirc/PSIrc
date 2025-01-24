@@ -39,6 +39,7 @@ class Command(Enum):
 
     ERR_NONICKNAMEGIVEN = 431
     ERR_NICKCOLLISION = 436
+    ERR_NOTONCHANNEL = 442
     ERR_NOTREGISTERED = 451
 
     ERR_NEEDMOREPARAMS = 461
@@ -61,6 +62,7 @@ class Command(Enum):
     QUIT = 1010
     CONNECT = 1011
     NAMES = 1012
+    PART = 1013
 
     CAP = 2000
 
