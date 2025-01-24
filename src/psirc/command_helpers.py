@@ -7,9 +7,4 @@ from psirc.defines.responses import Command
 
 def send_local_user_nicks(client_socket: socket.socket, server: IRCServer, hop_count: str) -> None:
     for user in server.get_local_users():
-        RoutingManager.respond_client(
-            client_socket,
-            command=Command.NICK,
-            nickname=user,
-            hopcount=hop_count
-        )
+        RoutingManager.send_command(client_socket, command=Command.NICK, nickname=user, hopcount=hop_count)

@@ -20,7 +20,9 @@ class Command(Enum):
     RPL_ENDOFWHOIS = 318
     RPL_WHOISCHANNELS = 319
     RPL_TOPIC = 332
+    # Names
     RPL_NAMREPLY = 353
+    RPL_ENDOFNAMES = 366
     RPL_YOUREOPER = 381
 
     # ------------ ERRORS -------------
@@ -37,11 +39,13 @@ class Command(Enum):
 
     ERR_NONICKNAMEGIVEN = 431
     ERR_NICKCOLLISION = 436
+    ERR_NOTONCHANNEL = 442
     ERR_NOTREGISTERED = 451
 
     ERR_NEEDMOREPARAMS = 461
     ERR_ALREADYREGISTRED = 462
     ERR_PASSWDMISMATCH = 464
+    ERR_CHANOPRIVISNEEDED = 482
 
     # Responses greater than 1000
     # Representing text commands
@@ -58,6 +62,9 @@ class Command(Enum):
 
     QUIT = 1010
     CONNECT = 1011
+    NAMES = 1012
+    PART = 1013
+    KICK = 1014
 
     CAP = 2000
 

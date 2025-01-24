@@ -16,3 +16,11 @@ class NotOnChannel(Exception):
 
 class ChanopPrivIsNeeded(Exception):
     pass
+
+
+class NoSuchNick(Exception):
+    pass
+
+
+class NickAlreadyInUse(Exception):
+    pass

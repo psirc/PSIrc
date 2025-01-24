@@ -5,10 +5,9 @@ from psirc.server import IRCServer, AlreadyRegistered
 from psirc.message import Message, Prefix
 from psirc.defines.responses import Command
 from psirc.session_info import SessionInfo, SessionType
-from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
-from psirc.defines.exceptions import NoSuchChannel
+from psirc.defines.exceptions import NoSuchChannel, NoSuchNick, NotOnChannel, ChanopPrivIsNeeded
 
 import psirc.command_helpers as helpers
 
@@ -41,19 +40,15 @@ def handle_connect_command(
         ...
 
     # Send PASS message
-    RoutingManager.send_command(
-        server_socket,
-        command=Command.PASS,
-        password=session_info.password
-    )
+    RoutingManager.send_command(server_socket, command=Command.PASS, password=session_info.password)
 
     # Send SERVER message
     RoutingManager.send_command(
         server_socket,
         command=Command.SERVER,
         servername=server.nickname,
-        hopcount='1',
-        trailing="Placeholder server message"
+        hopcount="1",
+        trailing="Placeholder server message",
     )
 
 
@@ -64,7 +59,7 @@ def handle_oper_command(
     ...
     """  # TODO write doc
     if not session_info:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED, '*')
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED, "*")
         return
     if message.command is not Command.OPER:
         raise ValueError("Implementation error: Wrong command type")
@@ -146,11 +141,13 @@ def handle_pass_command(
             server.register_local_connection(client_socket, session_info, message.params["password"])
         else:
             # missing params
-            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, '*')
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, "*")
             raise ValueError("Missing params from message command PASS")
         # OK, no response to client
     except AlreadyRegistered:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname if session_info else '*')
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname if session_info else "*"
+        )
     # OK, no response to client
 
 
@@ -190,11 +187,11 @@ def handle_nick_command(
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]
     else:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, '*')
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, "*")
         return
 
     if not server.is_unique(nickname):
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION, '*')
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION, "*")
 
     session_info.nickname = nickname
 
@@ -255,7 +252,9 @@ def handle_user_command(
         server.register_local_user(client_socket, session_info)
         logging.info(f"Registered: {session_info}")
 
-        RoutingManager.respond_client(client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname, recepient=session_info.nickname)
+        RoutingManager.respond_client(
+            client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname, recepient=session_info.nickname
+        )
         # TODO: notify other servers of new user
     elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
@@ -331,7 +330,7 @@ def handle_privmsg_command(
         receiver = message.params["receiver"]
 
     if not receiver:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, session_info.nickname)
         return
 
     message_to_send = message
@@ -344,8 +343,7 @@ def handle_privmsg_command(
             RoutingManager.send_to_user(receiver, message_to_send, server._users)
     except NoSuchChannel:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
-        return
-    except KeyError:
+    except NoSuchNick:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK, session_info.nickname)
 
 
@@ -362,33 +360,138 @@ def handle_ping_command(
 
 
 def handle_join_command(
-    server: IRCServer, _: socket.socket, session_info: SessionInfo | None, message: Message
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
 
     if not message.params or not session_info:
         return
     channel_name = message.params["channel"]
+    print(channel_name)
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)
-    topic_rpl = Message(
-        prefix=None,
-        command=Command.RPL_TOPIC,
-        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing="No topic yet"),
-    )
-    print(topic_rpl)
-
     # handle better namereply
     names = server._channels.get_names(channel_name)
+    symbol = server._channels.get_symbol(channel_name)
 
-    nam_rpl = Message(
+    topic = "No topic yet"  # TODO get channel topic instead of this
+    RoutingManager.respond_client(
+        client_socket,
+        prefix=None,
+        command=Command.RPL_TOPIC,
+        recepient=session_info.nickname,
+        channel=channel_name,
+        trailing=topic,
+    )
+    RoutingManager.respond_client(
+        client_socket,
         prefix=None,
         command=Command.RPL_NAMREPLY,
-        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing=names),
+        recepient=session_info.nickname,
+        symbol=symbol,
+        channel=channel_name,
+        trailing=names,
     )
-    print(nam_rpl)
 
-    RoutingManager.send_to_user(session_info.nickname, topic_rpl, server._users)
-    RoutingManager.send_to_user(session_info.nickname, nam_rpl, server._users)
+
+def handle_names_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    print("handling names")
+    if message.command is not Command.NAMES:
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        raise ValueError("Cannot call names if not registered")
+
+    if not message.params or not message.params["channel"]:
+        # TODO if channel not passed return all visible channels
+        raise NotImplementedError("Not yet implemented")
+
+    channel_name = message.params["channel"]
+    try:
+        names = server._channels.get_names(channel_name)
+        symbol = server._channels.get_symbol(channel_name)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL)
+
+    RoutingManager.respond_client(
+        client_socket,
+        prefix=None,
+        command=Command.RPL_NAMREPLY,
+        recepient=session_info.nickname,
+        channel=channel_name,
+        symbol=symbol,
+        trailing=names,
+    )
+
+    RoutingManager.respond_client(
+        client_socket,
+        prefix=None,
+        command=Command.RPL_ENDOFNAMES,
+        recepient=session_info.nickname,
+        channel=channel_name,
+    )
+
+
+def handle_part_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    if message.command is not Command.PART:
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        raise ValueError("Operation not allowed for unknown")
+
+    if not message.params or not (channel_name := message.params["channel"]):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        return
+    try:
+        server._channels.part_from_channel(channel_name, session_info.nickname)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
+    except NotOnChannel:
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOTONCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
+
+
+def handle_kick_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    if message.command is not Command.KICK:
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        raise ValueError("Operation not allowed for unknown")
+
+    if (
+        not message.params
+        or not (channel_name := message.params["channel"])
+        or not (kicked_nick := message.params["nickname"])
+    ):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        return
+
+    print(channel_name)
+    try:
+        server._channels.kick(channel_name, session_info.nickname, kicked_nick)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
+    except NotOnChannel:
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOTONCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
+    except ChanopPrivIsNeeded:
+        RoutingManager.respond_client_error(
+            client_socket,
+            Command.ERR_CHANOPRIVISNEEDED,
+            recepient=session_info.nickname,
+            channel=channel_name,
+        )
 
 
 CMD_FUNCTIONS = {
@@ -401,4 +504,7 @@ CMD_FUNCTIONS = {
     Command.PING: handle_ping_command,
     Command.JOIN: handle_join_command,
     Command.OPER: handle_oper_command,
+    Command.NAMES: handle_names_command,
+    Command.PART: handle_part_command,
+    Command.KICK: handle_kick_command,
 }
