@@ -8,7 +8,7 @@ from psirc.session_info import SessionInfo, SessionType
 from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
-from psirc.defines.exceptions import NoSuchChannel, NoSuchNick, NotOnChannel
+from psirc.defines.exceptions import NoSuchChannel, NoSuchNick, NotOnChannel, ChanopPrivIsNeeded
 
 import psirc.command_helpers as helpers
 
@@ -440,6 +440,33 @@ def handle_part_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOTONCHANNEL, channel=channel_name)
 
 
+def handle_kick_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    if message.command is not Command.KICK:
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        raise ValueError("Operation not allowed for unknown")
+
+    if (
+        not message.params
+        or not (channel_name := message.params["channel"])
+        or not (kicked_nick := message.params["nickname"])
+    ):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
+        return
+
+    try:
+        server._channels.kick(channel_name, session_info.nickname, kicked_nick)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, channel=channel_name)
+    except NotOnChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTONCHANNEL, channel=channel_name)
+    except ChanopPrivIsNeeded:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_CHANOPRIVISNEEDED, channel=channel_name)
+
+
 CMD_FUNCTIONS = {
     Command.PASS: handle_pass_command,
     Command.NICK: handle_nick_command,
@@ -452,4 +479,5 @@ CMD_FUNCTIONS = {
     Command.OPER: handle_oper_command,
     Command.NAMES: handle_names_command,
     Command.PART: handle_part_command,
+    Command.KICK: handle_kick_command,
 }

@@ -45,6 +45,7 @@ class Command(Enum):
     ERR_NEEDMOREPARAMS = 461
     ERR_ALREADYREGISTRED = 462
     ERR_PASSWDMISMATCH = 464
+    ERR_CHANOPRIVISNEEDED = 482
 
     # Responses greater than 1000
     # Representing text commands
@@ -63,6 +64,7 @@ class Command(Enum):
     CONNECT = 1011
     NAMES = 1012
     PART = 1013
+    KICK = 1014
 
     CAP = 2000
 
