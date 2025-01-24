@@ -398,7 +398,8 @@ def handle_privmsg_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED)
         return
 
-    message.prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+    if session_info.type == SessionType.USER:
+        message.prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
 
     # can be either nickname or servername
     receiver = None
