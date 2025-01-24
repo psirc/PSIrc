@@ -274,4 +274,23 @@ Funkcje:
         - Upiększenie interfejsu klienta
 
 ## 12. Instukcja użytkownika
+### Instalacja
+
+Do zainstalowania projektu należy najpierw zbudować pakiet. Projekt korzysta z narzędzia [Poetry](https://python-poetry.org/) jako menadżera pakietu. Aby zainstalować zależności należy uruchomić:
+
+```sh
+poetry install
+```
+
+Następnie aby zbudować projekt można posłużyć się komendą:
+
+```sh
+poetry build
+```
+
+Potem program można zainstalować przy użyciu pipx
+
+```as
+pipx install -e .
+```
 
