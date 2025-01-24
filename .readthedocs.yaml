@@ -1,0 +1,29 @@
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+# Required
+version: 2
+
+# Set the OS, Python version, and other tools you might need
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.13"
+  jobs:
+    pre_install:
+      - pip install poetry
+      - pip install poetry-plugin-export
+      - poetry install --without dev,test --sync
+      - poetry --without-hashes export --format=requirements.txt > docs/requirements.txt
+    pre_build:
+      - poetry build
+      - pip install -e .
+
+# Build documentation in the "docs/" directory with Sphinx
+sphinx:
+  configuration: docs/conf.py
+
+python:
+  install:
+    - requirements: docs/requirements.txt
+
