@@ -79,8 +79,31 @@ def handle_oper_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
     """Handle Oper command.
-    ...
-    """  # TODO write doc
+
+    Command: OPER
+        Parameters: <user> <password>
+
+    Numeric Replies:
+    - ERR_NEEDMOREPARAMS
+    - ERR_PASSWDMISMATCH
+    - ERR_NOTREGISTERED
+    - RPL_YOUROPER
+
+    If the user is known (registered), tries to obtain irc operator privileges.
+    Checks if required params are provided (user, password).
+    If credentials are correct user is granted operator privileges and recieved RPL_YOUROPER
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :type message: ``Message``
+    :return: None
+    :rtype: None
+    """
     if not session_info:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED, "*")
         return
@@ -206,7 +229,7 @@ def handle_nick_command(
         if not session_info:
             raise ValueError("Unexpectedly didnt get session info")
 
-    if session_info.type is SessionType.SERVER:
+    if session_info.type is SessionType.SERVER and message.params:
         server.register_external_user(message.params["nickname"], session_info)
         return
 
