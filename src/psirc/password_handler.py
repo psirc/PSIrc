@@ -4,7 +4,7 @@ from psirc.irc_validator import IRCValidator
 class PasswordHandler:
     def __init__(self, filename: str) -> None:
         self._filename = filename
-        self._passwords: dict[str, dict[str, str | None]] = {"I": {}, "C": {}, "N": {}}
+        self._passwords: dict[str, dict[str, str | None]] = {"I": {}, "C": {}, "N": {}, "O": {}}
         self._oper_credentials: dict[str, str] = dict()
 
     @staticmethod
@@ -26,7 +26,7 @@ class PasswordHandler:
         return all((type == "O", password is not None, IRCValidator.validate_user(user=user)))
 
     def valid_operator(self, user: str, password: str) -> bool:
-        return user in self._oper_credentials.keys() and password == self._oper_credentials[user]
+        return user in self._passwords["O"].keys() and password == self._passwords["O"][user]
 
     def _valid_password(self, address: str, password: str | None) -> bool:
         return not self._passwords["I"][address] or self._passwords["I"][address] == password
@@ -55,13 +55,13 @@ class PasswordHandler:
         return False
 
     def valid_connect_password(self, hostname: str, password: str | None) -> bool:
-        return self._passwords['C'].get(hostname) == password
+        return self._passwords["C"].get(hostname) == password
 
     def valid_name_password(self, hostname: str, password: str | None) -> bool:
-        return self._passwords['N'].get(hostname) == password
+        return self._passwords["N"].get(hostname) == password
 
     def get_c_password(self, hostname: str) -> str:
-        return str(self._passwords['C'].get(hostname))
+        return str(self._passwords["C"].get(hostname))
 
     def parse_config(self) -> None:
         with open(self._filename, "r") as fp:
@@ -74,10 +74,7 @@ class PasswordHandler:
                     continue
                 line = line.split("#")[0].rstrip()  # strip comments
                 line_list = line[2:].split(":")  # split into parts
-                if self._valid_operator_creds(type, line_list[0], line_list[1]):
-                    self._oper_credentials[line_list[0]] = line_list[1]
-                    continue
-                elif not self.valid_host(type, line_list[0]):
+                if not self.valid_host(type, line_list[0]):
                     continue
                 self._passwords[type][line_list[0]] = line_list[1] if line_list[1] else None
         print("passwords set")
