@@ -11,8 +11,8 @@ class ClientManager:
     """
 
     def __init__(self) -> None:
-        self._users: dict[str, LocalUser | ExternalUser] = {}
-        self._servers: dict[str, Server] = {}
+        self._users: dict[str, LocalUser | ExternalUser] = dict()
+        self._servers: dict[str, Server] = dict()
         self._lock = threading.Lock()
 
     def add_local(self, user_nick: str, user_socket: socket.socket) -> None:
@@ -123,8 +123,8 @@ class ClientManager:
 
     def has_oper_privileges(self, user_nick: str) -> bool:
         with self._lock:
-            if user_nick in self._users.keys() and isinstance(self._users["user_nick"], LocalUser):
-                return True
+            if user_nick in self._users.keys() and isinstance((user := self._users[user_nick]), LocalUser):
+                return user.is_oper
             return False
 
     def get_local_users(self) -> list[str]:

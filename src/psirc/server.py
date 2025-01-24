@@ -48,6 +48,7 @@ class IRCServer:
                     logging.warning(f"Invalid message from client:\n{data}")
                     # server sends no response
                     continue
+                logging.info(f"Recived message: {message}")
                 session_info = self._sessions.get_info(client_socket)
 
                 if message.command not in self._commands.keys():

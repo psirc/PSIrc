@@ -16,8 +16,10 @@ def handle_connect_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message
 ) -> None:
 
-    # TODO: check for oper privileges
-
+    nickname = session_info.nickname
+    if not server._users.has_oper_privileges(nickname):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOPRIVILEGES, nickname if nickname else "*")
+        return
     if not message.params or "target_server" not in message.params:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
         return
@@ -383,14 +385,12 @@ def handle_join_command(
     if not message.params or not session_info:
         return
     channel_name = message.params["channel"]
-    print(channel_name)
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)
-    # handle better namereply
     names = server._channels.get_names(channel_name)
     symbol = server._channels.get_symbol(channel_name)
+    topic = server._channels.get_topic(channel_name)
 
-    topic = "No topic yet"  # TODO get channel topic instead of this
     RoutingManager.respond_client(
         client_socket,
         prefix=None,
@@ -413,7 +413,6 @@ def handle_join_command(
 def handle_names_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
-    print("handling names")
     if message.command is not Command.NAMES:
         raise ValueError("Implementation error: Wrong command type")
 
@@ -491,7 +490,6 @@ def handle_kick_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
-    print(channel_name)
     try:
         server._channels.kick(channel_name, session_info.nickname, kicked_nick)
     except NoSuchChannel:
@@ -524,4 +522,5 @@ CMD_FUNCTIONS = {
     Command.NAMES: handle_names_command,
     Command.PART: handle_part_command,
     Command.KICK: handle_kick_command,
+    Command.CONNECT: handle_connect_command,
 }

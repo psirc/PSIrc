@@ -27,9 +27,9 @@ class RoutingManager:
         **kwargs: str,
     ) -> None:
         if command.value >= 1000:
-            print("DEV: WARNING! IRC Command passed in numeric reply function")
+            logging.warning("IRC Command passed in numeric reply function")
         response = Message(prefix=prefix, command=command, params=parametrize(command, **kwargs, recepient=recepient))
-        print(response)
+        logging.info(f"Responding to client:{response}")
         cls.send_response(client_socket, response)
 
     @classmethod
@@ -48,7 +48,7 @@ class RoutingManager:
             command=error_type,
             params=parametrize(error_type, recepient=recepient, **kwargs),
         )
-        print(message_error)
+        logging.info(f"Responding to client with error: {message_error}")
         cls.send_response(client_socket, message_error)
 
     @staticmethod

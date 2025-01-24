@@ -68,5 +68,4 @@ def test_parse_params(text, params):
     msg = MessageParser.parse_message(text)
     assert isinstance(msg, Message)
     assert isinstance(msg.params, Params)
-    print(msg.params.params)
     assert params == msg.params.params

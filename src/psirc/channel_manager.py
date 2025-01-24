@@ -39,7 +39,8 @@ class ChannelManager:
             if channel.is_in_channel(nickname):
                 channel.part(nickname)
                 check_if_empty.append(channel_name)
-        self._check_for_cleanup(channel_name)
+        for channel_name in check_if_empty:
+            self._check_for_cleanup(channel_name)
 
     def kick(self, channel_name: str, nickname: str, kicked_nick: str) -> None:
         """Delegate KICK - kick from channel
@@ -71,6 +72,10 @@ class ChannelManager:
     def get_symbol(self, channel_name: str) -> str:
         channel = self.get_channel(channel_name)
         return channel.channel_symbol()
+
+    def get_topic(self, channel_name: str) -> str:
+        channel = self.get_channel(channel_name)
+        return channel.topic
 
     def get_channel(self, channel_name: str) -> Channel:
         """Get Channel with name
