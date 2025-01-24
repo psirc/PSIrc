@@ -73,9 +73,52 @@ class RoutingManager:
 
     @classmethod
     def send_to_channel(cls, server: IRCServer, channel: Channel, message: Message) -> None:
+        """Send message to channel members.
+
+        Doesn't send message to local user if local user sent the message or to closest server from which message was received.
+        """
         logging.info(f"Forwarding message to channel: {message}")
+        sender_nick = message.prefix.sender
+        if not sender_nick:
+            raise ValueError("Missing sender nick in send to channel")
+        sender = server._users.get_user(sender_nick)
+        if not sender:
+            raise ValueError("Sender not a registered user")
+
+        # Dont resend message to server. Finding the sender socket
+        sender_socket = None
+        if isinstance(sender, LocalUser):
+            sender_socket = server._sessions.get_socket(sender_nick)
+        elif isinstance(sender, ExternalUser):
+            sender_socket = server._sessions.get_socket(sender.location)
+        if not sender_socket:
+            raise ValueError("Cant find sender socket")
+
+        next_hop_socks = set()
+        # send to local users
         for nickname in channel.users:
-            if message.prefix and nickname == message.prefix.sender:
-                # dont resend message to sender
-                continue
-            cls.forward_to_user(server, nickname, message)
+            receiver = server._users.get_user(nickname)
+
+            if not receiver:
+                logging.warning(f"No user with nickname: {receiver_nick}")
+                raise NoSuchNick("No user with given nickname")
+
+            if isinstance(receiver, LocalUser):
+                if receiver.socket == sender_socket:
+                    # dont send to sender
+                    continue
+                cls.send(receiver.socket, message)
+            elif isinstance(receiver, ExternalUser):
+                next_hop_sock = server._sessions.get_socket(receiver.location)
+                if not next_hop_sock:
+                    raise ValueError("Implementation error inside the code")
+                if next_hop_sock == sender_socket:
+                    # dont send to sender
+                    continue
+                next_hop_socks.add(next_hop_sock)
+            else:
+                raise ValueError("Implementation error inside the code")
+
+        # broadcast to servers
+        for next_hop_sock in next_hop_socks:
+            cls.send(next_hop_sock, message)
