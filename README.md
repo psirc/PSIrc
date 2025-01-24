@@ -312,9 +312,9 @@ C:127.0.0.1:6668:abcde:
 # O:<nickname>:<password>:
 O:operator:oper_passwd:
 ```
-Można ustawić hasło na nazwę użytkownika zgodnie z przykładem z pliku. ("I lines")
-Można ustawić hasło dla odpowiednich adresów ip lub zakresów adresów ip zgodnie z przykładem. ("I lines")
-Można ustawić hasło potrzebne do uzyskania statusu operatora ("O lines")
+- Można ustawić hasło na nazwę użytkownika zgodnie z przykładem z pliku. ("I lines")
+- Można ustawić hasło dla odpowiednich adresów ip lub zakresów adresów ip zgodnie z przykładem. ("I lines")
+- Można ustawić hasło potrzebne do uzyskania statusu operatora ("O lines")
 
 ### Uruchomienie serwera
 Po zainstalowaniu programu, serwer można uruchomić:
