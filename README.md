@@ -295,10 +295,33 @@ pipx install -e .
 ```
 ### Uruchomienie serwera
 Po zainstalowaniu programu, serwer można uruchomić:
+```
+# define password I lines here
+# I:<hostname>@<address>:<password>:
+I:doaads@*:inne_haslo: # haslo dla uzytkownika "doaads" pod dowolnym adresem
+I:*@127.*:p@ssw0rd:  # hasło dla adresów zaczynających się od 127
+
+# define C/N lines here (server connection passwords)
+# C:<remote-server-addr-or-name>:<password>:
+# N:<remote-server-addr-or-name>:<password>:
+C:127.0.0.1:6667:abcde:
+C:127.0.0.1:6668:abcde:
+
+# define O lines here (operator config)
+# O:<nickname>:<password>:
+O:operator:oper_passwd:
+```
+Można ustawić hasło na nazwę użytkownika zgodnie z przykładem z pliku. ("I lines")
+Można ustawić hasło dla odpowiednich adresów ip lub zakresów adresów ip zgodnie z przykładem. ("I lines")
+Można ustawić hasło potrzebne do uzyskania statusu operatora ("O lines")
+
+### Konfigurowanie haseł
+Po zainstalowaniu programu, hasła serwera można edytować edytując plik psirc.conf:
 ```sh
 psirc --address {żądany adres serwera} --port {żądany port serwera} --name {nazwa własna serwera IRC}
 ```
 Można również uruchomić serwer bez podawania parametrów poprzez: `psirc`, serwer zostanie domyślnie uruchomiony na pod adresem localhost na porcie 6667
+
 ### Korzystanie z usług serwera za pośrednictwem programu klienckigo
 Można do tego wykorzystać np. program kliencki irssi
 ```
