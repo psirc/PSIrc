@@ -29,13 +29,16 @@ def handle_connect_command(
         ...
 
     target_server = message.params["target_server"]
+    print(f"target server: {target_server}")
     port = message.params["port"] if message.params["port"] else str(server.port)
+    print(f"port: {port}")
 
     # get server socket
     server_socket = server.connect_to_server(target_server, port)
     if not server_socket:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHSERVER, session_info.nickname)
         return
+    print(f"connected to server {target_server}:{port}")
 
     # create session
     server.register_local_connection(server_socket, None, None)
@@ -46,6 +49,7 @@ def handle_connect_command(
     # set password
     server_session.password = server.password_handler.get_c_password(target_server)
     if not server_session.password:
+        print("Connected to server but no password found")
         # TODO: raise some error or log in console?
         return
 
