@@ -16,8 +16,10 @@ def handle_connect_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo, message: Message
 ) -> None:
 
-    # TODO: check for oper privileges
-
+    nickname = session_info.nickname
+    if not server._users.has_oper_privileges(nickname):
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOPRIVILEGES, nickname if nickname else "*")
+        return
     if not message.params or "target_server" not in message.params:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, session_info.nickname)
         return
@@ -516,4 +518,5 @@ CMD_FUNCTIONS = {
     Command.NAMES: handle_names_command,
     Command.PART: handle_part_command,
     Command.KICK: handle_kick_command,
+    Command.CONNECT: handle_connect_command,
 }

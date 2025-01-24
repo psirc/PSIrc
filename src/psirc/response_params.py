@@ -68,6 +68,7 @@ CMD_MESSAGES = {
     Command.ERR_ALREADYREGISTRED: "You may not reregister",
     Command.ERR_NOTONCHANNEL: "You're not on that channel",
     Command.ERR_CHANOPRIVISNEEDED: "You're not channel operator",
+    Command.ERR_NOPRIVILEGES: "Permission Denied- You're not an IRC operator",
 }
 
 
