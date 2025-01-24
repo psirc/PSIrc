@@ -138,3 +138,7 @@ class ClientManager:
                 if isinstance(self._users[user], LocalUser):
                     result.append(user)
         return result
+    
+    def list_servers(self) -> dict[str, Server]:
+        with self._lock:
+            return self._servers

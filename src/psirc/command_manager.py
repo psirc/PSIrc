@@ -4,7 +4,6 @@ import logging
 from psirc.server import IRCServer, AlreadyRegistered
 from psirc.message import Message, Prefix
 from psirc.defines.responses import Command
-from psirc.client import LocalUser, ExternalUser
 from psirc.session_info import SessionInfo, SessionType
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
@@ -30,6 +29,7 @@ def handle_connect_command(
         # TODO: Connect a remote server to another remote server
         # Forward this message to server
         ...
+        return
 
     target_server = message.params["target_server"]
     print(f"target server: {target_server}")
@@ -308,16 +308,19 @@ def handle_server_command(
         print("server message has no prefix")
         return
 
+    # 1. we made the connection, the server responds with more info about itself
+    # 2. OR we are getting info about another server on the network
     if session_info.type == SessionType.SERVER:
         print("got SERVER message from existing server")
-        # we made the connection, the server responds with more info about itself
-        # OR we are getting info about another server on the network
 
-        # this is a relayed message
-        if session_info.nickname != message.prefix.sender:
-            print(f"got relayed server information about {message.prefix.sender} from {session_info.nickname}, the server is {message.params['hopcount']} hops away")
-            # TODO: Add route info somewhere (server which sent it can be reached from this client socket)
-            server.register_server(message.prefix.sender, int(message.params["hopcount"]))
+        if session_info.nickname != message.params['servername']:
+
+            # this is a relayed message (other server giving us info about itself, this should NOT happen)
+            if not server._users.get_server(message.params['servername']):
+                # we do not know this server, register it and keep broadcasting
+                logging.info(f"got relayed server information about {message.params['servername']} from {session_info.nickname}, the server is {message.params['hopcount']} hops away")
+                server.register_server(message.params['servername'], int(message.params["hopcount"]))
+            # we know this server already, just relay
             return
 
         print(f"connected server has identified itself as: {session_info.nickname}")
@@ -356,6 +359,7 @@ def handle_server_command(
         hopcount=hop_count,
         trailing="Server desc placeholder",
     )
+    helpers.send_known_servers(session_info.nickname, client_socket, server)
     helpers.send_local_user_nicks(client_socket, server, hop_count)
     helpers.broadcast_server_to_neighbours(server, message)
 

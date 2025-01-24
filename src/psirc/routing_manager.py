@@ -9,6 +9,7 @@ from psirc.client import LocalUser, ExternalUser
 from psirc.channel import Channel
 from psirc.defines.responses import Command
 from psirc.defines.exceptions import NoSuchNick
+from psirc.session_info import SessionType
 
 
 class RoutingManager:
@@ -70,6 +71,17 @@ class RoutingManager:
             cls.send(next_hop_sock, message)
         else:
             raise ValueError("Implementation error inside the code")
+
+    @classmethod
+    def broadcast_message(cls, server: IRCServer, sender_nick: str, message: Message) -> None:
+        if not message.prefix:
+            message.prefix = Prefix(server.nickname)
+        if message.params and 'hopcount' in message.params:
+            message.params['hopcount'] = str(int(message.params['hopcount']) + 1)
+        server_sessions = server._sessions.get_sessions_by_type(SessionType.SERVER)
+        for peer_socket in server_sessions:
+            if server_sessions[peer_socket].nickname != sender_nick:
+                RoutingManager.send(peer_socket, message)
 
     @classmethod
     def send_to_channel(cls, server: IRCServer, channel: Channel, message: Message) -> None:

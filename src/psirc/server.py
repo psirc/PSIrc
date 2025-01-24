@@ -135,6 +135,3 @@ class IRCServer:
 
     def get_local_users(self) -> list[str]:
         return self._users.get_local_users()
-
-    def get_neighbour_socks(self) -> list[socket.socket]:
-        ...
