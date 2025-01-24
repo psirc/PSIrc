@@ -390,6 +390,11 @@ def handle_privmsg_command(
     try:
         if IRCValidator.validate_channel(receiver):
             channel = server._channels.get_channel(receiver)
+            if session_info.nickname not in channel.users:
+                RoutingManager.respond_client_error(
+                    client_socket, Command.ERR_NOTONCHANNEL, session_info.nickname, channel=receiver
+                )
+                return
             RoutingManager.send_to_channel(server, channel, message_to_send)
             return
 
@@ -446,6 +451,10 @@ def handle_join_command(
         channel=channel_name,
         trailing=names,
     )
+    channel = server._channels.get_channel(channel_name)
+    message.prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+
+    RoutingManager.send_to_channel(server, channel, message)
 
 
 def handle_names_command(
@@ -499,8 +508,13 @@ def handle_part_command(
     if not message.params or not (channel_name := message.params["channel"]):
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
+    prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+    message.prefix = prefix
     try:
         server._channels.part_from_channel(channel_name, session_info.nickname)
+        channel = server._channels.get_channel(channel_name)
+        RoutingManager.send_to_channel(server, channel, message)
+        RoutingManager.forward_to_user(server, session_info.nickname, message)
     except NoSuchChannel:
         RoutingManager.respond_client_error(
             client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
@@ -528,8 +542,14 @@ def handle_kick_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
+    prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+    message.prefix = prefix
+
     try:
         server._channels.kick(channel_name, session_info.nickname, kicked_nick)
+        channel = server._channels.get_channel(channel_name)
+        RoutingManager.send_to_channel(server, channel, message)
+        RoutingManager.forward_to_user(server, kicked_nick, message)
     except NoSuchChannel:
         RoutingManager.respond_client_error(
             client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
