@@ -5,7 +5,6 @@ from psirc.server import IRCServer, AlreadyRegistered
 from psirc.message import Message, Prefix
 from psirc.defines.responses import Command
 from psirc.session_info import SessionInfo, SessionType
-from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
 from psirc.defines.exceptions import NoSuchChannel, NoSuchNick, NotOnChannel, ChanopPrivIsNeeded
