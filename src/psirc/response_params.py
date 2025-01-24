@@ -27,7 +27,7 @@ CMD_PARAMS = {
     Command.ERR_WASNOSUCHNICK: ["nickname"],
     Command.ERR_TOOMANYTARGETS: ["target"],
     Command.ERR_NOTONCHANNEL: ["channel"],
-    Command.ERR_CHANOPRIVISNEEDED: ["channel"],
+    Command.ERR_CHANOPRIVSNEEDED: ["channel"],
     Command.PASS: ["password"],
     Command.NICK: ["nickname", "[hopcount]"],
     Command.USER: ["username", "hostname", "servername", "realname"],
@@ -67,7 +67,7 @@ CMD_MESSAGES = {
     Command.ERR_NEEDMOREPARAMS: "Not enough parameters",
     Command.ERR_ALREADYREGISTRED: "You may not reregister",
     Command.ERR_NOTONCHANNEL: "You're not on that channel",
-    Command.ERR_CHANOPRIVISNEEDED: "You're not channel operator",
+    Command.ERR_CHANOPRIVSNEEDED: "You're not channel operator",
     Command.ERR_NOPRIVILEGES: "Permission Denied- You're not an IRC operator",
 }
 

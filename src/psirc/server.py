@@ -1,7 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 import socket
 import importlib
-from psirc.message import Prefix
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
 from psirc.session_info import SessionInfo, SessionType

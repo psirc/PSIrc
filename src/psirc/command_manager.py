@@ -71,7 +71,7 @@ def handle_connect_command(
         hopcount="1",
         trailing="Placeholder server message",
     )
-    helpers.send_local_user_nicks(server_socket, server, '1')
+    helpers.send_local_user_nicks(server_socket, server, "1")
     helpers.send_external_user_nicks(server_socket, server)
 
 
@@ -102,7 +102,7 @@ def handle_quit_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
     """Handle QUIT command.
-    
+
     Description:
     Command: QUIT
     Parameters: [<quit_message>]
@@ -207,7 +207,7 @@ def handle_nick_command(
             raise ValueError("Unexpectedly didnt get session info")
 
     if session_info.type is SessionType.SERVER:
-        server.register_external_user(message.params['nickname'], session_info)
+        server.register_external_user(message.params["nickname"], session_info)
         return
 
     if message.params and "nickname" in message.params:
@@ -315,13 +315,15 @@ def handle_server_command(
     if session_info.type == SessionType.SERVER:
         print("got SERVER message from existing server")
 
-        if session_info.nickname != message.params['servername']:
+        if session_info.nickname != message.params["servername"]:
 
             # this is a relayed message (other server giving us info about itself, this should NOT happen)
-            if not server._users.get_server(message.params['servername']):
+            if not server._users.get_server(message.params["servername"]):
                 # we do not know this server, register it and keep broadcasting
-                logging.info(f"got relayed server information about {message.params['servername']} from {session_info.nickname}, the server is {message.params['hopcount']} hops away")
-                server.register_server(message.params['servername'], int(message.params["hopcount"]))
+                logging.info(
+                    f"got relayed server information about {message.params['servername']} from {session_info.nickname}, the server is {message.params['hopcount']} hops away"
+                )
+                server.register_server(message.params["servername"], int(message.params["hopcount"]))
             # we know this server already, just relay
             return
 
@@ -372,6 +374,15 @@ def handle_privmsg_command(
 ) -> None:
     """
     Handles recieved PRIVMSG command
+
+    Command: PRIVMSG
+        Parameters: <receiver>{,<receiver>} <text to be sent>
+
+    Numeric Replies:
+    - ERR_NOTREGISTERED
+    - ERR_NOSUCHNICK
+    - ERR_NOSUCHCHANNEL
+    - ERR_NOTONCHANNEL
 
     Forwards message to user or channel
     Checks if: user is known(session info), required channel name is present
@@ -468,6 +479,15 @@ def handle_join_command(
 ) -> None:
     """
     Handles recieved JOIN command
+
+    Command: JOIN
+        Parameters: <channel>
+
+    Numeric Replies:
+    - ERR_NEEDMOREPARAMS
+    - ERR_NOSUCHCHANNEL
+    - RPL_TOPIC and RPL_NAMREPLY
+
 
     Checks if: user is known(session info), required channel name is present
     Delegates performing JOIN operation to channel manager.
@@ -594,9 +614,17 @@ def handle_part_command(
     """
     Handles recieved PART command
 
+    Command: PART
+        Parameters: <channel>
+
+    Numeric Replies:
+    - ERR_NEEDMOREPARAMS
+    - ERR_NOSUCHCHANNEL
+    - ERR_NOTONCHANNEL
+
     Checks if: user is known(session info), required channel name is present
     Delegates performing PART operation to channel manager.
-    If KICK operation performed correctly, notifies channel users and user kicked from channel.
+    If PART operation performed correctly, notifies channel users and user kicked from channel.
 
     :param server: Current server instance
     :type server: ``IRCServer``
@@ -641,6 +669,15 @@ def handle_kick_command(
 ) -> None:
     """
     Handles recieved KICK command
+
+    Command: KICK
+    Parameters: <channel> <user>
+
+    Numeric Replies:
+    - ERR_NEEDMOREPARAMS
+    - ERR_NOSUCHCHANNEL
+    - ERR_CHANOPRIVSNEEDED
+    - ERR_NOTONCHANNEL
 
     Checks if: user is known(session info), required command parameters present(channel, nickname)
     Delegates performing KICK operation to channel manager.
@@ -691,7 +728,7 @@ def handle_kick_command(
     except ChanopPrivIsNeeded:
         RoutingManager.respond_client_error(
             client_socket,
-            Command.ERR_CHANOPRIVISNEEDED,
+            Command.ERR_CHANOPRIVSNEEDED,
             recepient=session_info.nickname,
             channel=channel_name,
         )
