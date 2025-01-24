@@ -102,7 +102,7 @@ def handle_quit_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
     """Handle QUIT command.
-    
+
     Description:
     Command: QUIT
     Parameters: [<quit_message>]
