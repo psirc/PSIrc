@@ -315,7 +315,9 @@ def handle_server_command(
 
         # this is a relayed message
         if session_info.nickname != message.prefix.sender:
-            print(f"got relayed server information about {message.prefix.sender} from {session_info.nickname}, the server is {message.params['hopcount']} hops away")
+            print(
+                f"got relayed server information about {message.prefix.sender} from {session_info.nickname}, the server is {message.params['hopcount']} hops away"
+            )
             # TODO: Add route info somewhere (server which sent it can be reached from this client socket)
             server.register_server(message.prefix.sender, int(message.params["hopcount"]))
             return
@@ -386,6 +388,11 @@ def handle_privmsg_command(
     try:
         if IRCValidator.validate_channel(receiver):
             channel = server._channels.get_channel(receiver)
+            if session_info.nickname not in channel.users:
+                RoutingManager.respond_client_error(
+                    client_socket, Command.ERR_NOTONCHANNEL, session_info.nickname, channel=receiver
+                )
+                return
             RoutingManager.send_to_channel(server, channel, message_to_send)
             return
 
@@ -495,8 +502,15 @@ def handle_part_command(
     if not message.params or not (channel_name := message.params["channel"]):
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
+    prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+    message.prefix = prefix
     try:
         server._channels.part_from_channel(channel_name, session_info.nickname)
+        channel = server._channels.get_channel(channel_name)
+        RoutingManager.send_to_channel(server, channel, message)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOTONCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
     except NoSuchChannel:
         RoutingManager.respond_client_error(
             client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
@@ -524,8 +538,13 @@ def handle_kick_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
+    prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+    message.prefix = prefix
+
     try:
         server._channels.kick(channel_name, session_info.nickname, kicked_nick)
+        channel = server._channels.get_channel(channel_name)
+        RoutingManager.send_to_channel(server, channel, message)
     except NoSuchChannel:
         RoutingManager.respond_client_error(
             client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
