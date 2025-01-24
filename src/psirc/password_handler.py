@@ -1,4 +1,5 @@
 from psirc.irc_validator import IRCValidator
+import logging
 
 
 class PasswordHandler:
@@ -77,4 +78,4 @@ class PasswordHandler:
                 if not self.valid_host(type, line_list[0]):
                     continue
                 self._passwords[type][line_list[0]] = line_list[1] if line_list[1] else None
-        print("passwords set")
+        logging.info("Config set")

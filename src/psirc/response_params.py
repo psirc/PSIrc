@@ -6,6 +6,7 @@
 
 from psirc.message import Params
 from psirc.defines.responses import Command
+import logging
 
 CMD_PARAMS = {
     Command.RPL_AWAY: ["nickname", "trailing"],
@@ -79,7 +80,7 @@ def parametrize(command: Command, *, recepient: str | None = None, **kwargs: str
         # Numeric replies need a recepient
         if command.value < 1000:
             if not recepient:
-                print("Numeric commands require a 'recepient' parameter")
+                logging.warning("Numeric commands require a 'recepient' parameter")
                 return None
         # Other parameters
         for param in CMD_PARAMS[command]:
@@ -93,7 +94,9 @@ def parametrize(command: Command, *, recepient: str | None = None, **kwargs: str
                 if param_value:
                     params[param] = param_value
                 else:
-                    print(f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments")
+                    logging.warning(
+                        f"Response {command.name} requires: {[param for param in CMD_PARAMS[command]]} as arguments"
+                    )
                     return None
     if command in CMD_MESSAGES:
         params["response"] = f":{CMD_MESSAGES[command]}"

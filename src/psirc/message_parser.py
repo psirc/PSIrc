@@ -95,9 +95,7 @@ class MessageParser:
         params_list = params.split()
         params_list.append(trail) if trail else None
 
-        print(params_list)
         params_dict = {CMD_PARAMS[command][i]: param for i, param in enumerate(params_list)}
-        print(params_dict)
         return parametrize(command, **params_dict)
 
     @classmethod
@@ -113,7 +111,6 @@ class MessageParser:
 
         match = re.match(cls.message_regex, data)
         if not match:
-            print("Unable to match with message regex")
             return None
         prefix, command, params, trailing = match.group("prefix", "cmd", "params", "trail")
         prefix = cls._parse_prefix(prefix) if prefix else None

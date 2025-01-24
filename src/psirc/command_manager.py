@@ -379,7 +379,6 @@ def handle_join_command(
     if not message.params or not session_info:
         return
     channel_name = message.params["channel"]
-    print(channel_name)
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)
     # handle better namereply
@@ -409,7 +408,6 @@ def handle_join_command(
 def handle_names_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
-    print("handling names")
     if message.command is not Command.NAMES:
         raise ValueError("Implementation error: Wrong command type")
 
@@ -487,7 +485,6 @@ def handle_kick_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS)
         return
 
-    print(channel_name)
     try:
         server._channels.kick(channel_name, session_info.nickname, kicked_nick)
     except NoSuchChannel:
