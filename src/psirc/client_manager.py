@@ -50,6 +50,7 @@ class ClientManager:
             if user_nick in self._users.keys():
                 raise NickAlreadyInUse(f'Nick "{user_nick}" in use')
             self._users[user_nick] = ExternalUser(user_nick, hop_count, server_name)
+            print(f"added: {user_nick} as an external user")
 
     def add_server(self, server_nick: str, hop_count: int) -> None:
         if hop_count < 1:
@@ -137,6 +138,15 @@ class ClientManager:
             for user in self._users:
                 if isinstance(self._users[user], LocalUser):
                     result.append(user)
+        return result
+
+    def get_external_users(self) -> dict[str, int]:
+        result = {}
+        with self._lock:
+            for user in self._users:
+                ext_user = self._users[user]
+                if isinstance(ext_user, ExternalUser):
+                    result[ext_user.nick] = ext_user.hop_count
         return result
     
     def list_servers(self) -> dict[str, Server]:

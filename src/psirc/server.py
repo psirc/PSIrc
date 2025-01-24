@@ -127,11 +127,14 @@ class IRCServer:
         """Register local user."""
         self._users.add_local(session_info.nickname, client_socket)
 
-    def register_external_user(self, server_nickname: str, session_info: SessionInfo) -> None:
-        self._users.add_external(session_info.nickname, session_info.hops + 1, server_nickname)
+    def register_external_user(self, user_nickname: str, session_info: SessionInfo) -> None:
+        self._users.add_external(user_nickname, session_info.hops + 1, session_info.nickname)
 
     def register_server(self, nickname: str, hops: int) -> None:
         self._users.add_server(nickname, hops)
 
     def get_local_users(self) -> list[str]:
         return self._users.get_local_users()
+
+    def get_external_users(self) -> dict[str, int]:
+        return self._users.get_external_users()

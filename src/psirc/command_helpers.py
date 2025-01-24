@@ -9,7 +9,15 @@ from psirc.session_info import SessionType
 
 def send_local_user_nicks(client_socket: socket.socket, server: IRCServer, hop_count: str) -> None:
     for user in server.get_local_users():
+        print(f"sending local user: {user}")
         RoutingManager.send_command(client_socket, command=Command.NICK, nickname=user, hopcount=hop_count)
+
+
+def send_external_user_nicks(client_socket: socket.socket, server: IRCServer) -> None:
+    external_users = server.get_external_users()
+    for user in external_users:
+        print(f"external user: {user}")
+        RoutingManager.send_command(client_socket, command=Command.NICK, nickname=user, hopcount=str(external_users[user]))
 
 
 def broadcast_server_to_neighbours(server: IRCServer, message: Message) -> None:

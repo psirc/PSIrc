@@ -71,6 +71,8 @@ def handle_connect_command(
         hopcount="1",
         trailing="Placeholder server message",
     )
+    helpers.send_local_user_nicks(server_socket, server, '1')
+    helpers.send_external_user_nicks(server_socket, server)
 
 
 def handle_oper_command(
@@ -206,7 +208,8 @@ def handle_nick_command(
             raise ValueError("Unexpectedly didnt get session info")
 
     if session_info.type is SessionType.SERVER:
-        server.register_external_user(session_info.nickname, session_info)
+        server.register_external_user(message.params['nickname'], session_info)
+        return
 
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]
@@ -329,6 +332,8 @@ def handle_server_command(
         session_info.nickname = nickname
         session_info.hops = int(message.params["hopcount"])
         logging.info("Registered new server")
+
+        # give the server our known users
         return
 
     elif session_info.type != SessionType.UNKNOWN:
@@ -360,7 +365,6 @@ def handle_server_command(
         trailing="Server desc placeholder",
     )
     helpers.send_known_servers(session_info.nickname, client_socket, server)
-    helpers.send_local_user_nicks(client_socket, server, hop_count)
     helpers.broadcast_server_to_neighbours(server, message)
 
 
