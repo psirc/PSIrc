@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import socket
 import importlib
+from psirc.message import Prefix
 from psirc.connection_manager import ConnectionManager
 from psirc.message_parser import MessageParser
 from psirc.session_info import SessionInfo, SessionType
@@ -21,8 +22,9 @@ class IRCServer:
         self, nickname: str, host: str, port: int, max_workers: int = 10, *, config_file: str = "psirc.conf"
     ) -> None:
         self.running = False
-        self.port = port
         self.nickname = nickname
+        self.address = host
+        self.port = port
         self.password_handler = PasswordHandler(config_file)
         self._thread_executor = ThreadPoolExecutor(max_workers)
         self._connection = ConnectionManager(host, port, self._thread_executor)
@@ -128,8 +130,11 @@ class IRCServer:
     def register_external_user(self, server_nickname: str, session_info: SessionInfo) -> None:
         self._users.add_external(session_info.nickname, session_info.hops + 1, server_nickname)
 
-    def register_server(self, session_info: SessionInfo) -> None:
-        self._users.add_server(session_info.nickname, session_info.hops)
+    def register_server(self, nickname: str, hops: int) -> None:
+        self._users.add_server(nickname, hops)
 
     def get_local_users(self) -> list[str]:
         return self._users.get_local_users()
+
+    def get_neighbour_socks(self) -> list[socket.socket]:
+        ...

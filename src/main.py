@@ -9,7 +9,7 @@ def main() -> None:
     
     parser.add_argument("-a", "--address", dest="server_addr", default="127.0.0.1")
     parser.add_argument("-p", "--port", dest="port", default="6667")
-    parser.add_argument("-n", "--name", dest="name", default="PSIrc Server")
+    parser.add_argument("-n", "--name", dest="name", default="PSIrcServer")
 
     args = parser.parse_args()
 

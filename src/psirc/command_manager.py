@@ -55,12 +55,16 @@ def handle_connect_command(
         # TODO: raise some error or log in console?
         return
 
+    print(f"found password: {server_session.password}")
+    print(f"server nickname: {server.nickname}")
+
     # Send PASS message
     RoutingManager.send_command(server_socket, command=Command.PASS, password=server_session.password)
 
     # Send SERVER message
     RoutingManager.send_command(
         server_socket,
+        Prefix(server.nickname),
         command=Command.SERVER,
         servername=server.nickname,
         hopcount="1",
@@ -299,9 +303,23 @@ def handle_server_command(
         RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
         return
 
+    if not message.prefix:
+        print("server message has no prefix")
+        return
+
     if session_info.type == SessionType.SERVER:
+        print("got SERVER message from existing server")
         # we made the connection, the server responds with more info about itself
         # OR we are getting info about another server on the network
+
+        # this is a relayed message
+        if session_info.nickname != message.prefix.sender:
+            print(f"got relayed server information about {message.prefix.sender} from {session_info.nickname}, the server is {message.params['hopcount']} hops away")
+            # TODO: Add route info somewhere (server which sent it can be reached from this client socket)
+            server.register_server(message.prefix.sender, int(message.params["hopcount"]))
+            return
+
+        print(f"connected server has identified itself as: {session_info.nickname}")
 
         # if server is responding with this to SERVER msg:
         session_info.nickname = nickname
@@ -309,7 +327,6 @@ def handle_server_command(
         logging.info("Registered new server")
         return
 
-        # TODO: Handle the other case (info about other server)
     elif session_info.type != SessionType.UNKNOWN:
         raise ValueError("Received SERVER command from registered user!")
 
@@ -327,17 +344,19 @@ def handle_server_command(
     session_info.nickname = nickname
     session_info.hops = int(hop_count)
 
-    server.register_server(session_info)
+    server.register_server(session_info.nickname, session_info.hops)
     logging.info(f"Registered: {session_info}")
 
     RoutingManager.send_command(
         client_socket,
+        Prefix(server.nickname),
         command=Command.SERVER,
         servername=server.nickname,
         hopcount=hop_count,
         trailing="Server desc placeholder",
     )
     helpers.send_local_user_nicks(client_socket, server, hop_count)
+    helpers.broadcast_server_to_neighbours(server, message)
 
 
 def handle_privmsg_command(
