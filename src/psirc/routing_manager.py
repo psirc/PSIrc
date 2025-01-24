@@ -14,6 +14,13 @@ class RoutingManager:
 
     @staticmethod
     def send(client_socket: socket.socket, message: Message) -> None:
+        """Send a message to a local client or local server via the specified socket.
+
+        :param client_socket: client socket.
+        :type client_socket: ``socket.socket``
+        :param message: message to send.
+        :type message: ``Message``
+        """
         client_socket.send(str(message).encode())
 
     @classmethod
@@ -26,6 +33,19 @@ class RoutingManager:
         recepient: str | None,
         **kwargs: str,
     ) -> None:
+        """Respond to a local client with a specific command and parameters.
+
+        :param client_socket: client's socket.
+        :type client_socket: ``socket.socket``
+        :param prefix: prefix of the response (optional).
+        :type prefix: ``Prefix | None``
+        :param command: IRC command to send.
+        :type command: ``Command``
+        :param recepient: nick of recipient of the response (optional).
+        :type recepient: ``str | None``
+        :param kwargs: Additional parameters for the response.
+        :type kwargs: ``dict[str, str]``
+        """
         if command.value >= 1000:
             logging.warning("IRC Command passed in numeric reply function")
         response = Message(prefix=prefix, command=command, params=parametrize(command, **kwargs, recepient=recepient))
@@ -36,6 +56,17 @@ class RoutingManager:
     def send_command(
         cls, peer_socket: socket.socket, prefix: Prefix | None = None, *, command: Command, **kwargs: str
     ) -> None:
+        """Send a command message to a server or client.
+
+        :param peer_socket: socket to send to
+        :type peer_socket: ``socket.socket``
+        :param prefix: prefix of the message (optional).
+        :type prefix: ``Prefix | None``
+        :param command: IRC command to send.
+        :type command: ``Command``
+        :param kwargs: Additional parameters for the message.
+        :type kwargs: ``dict[str, str]``
+        """
         message = Message(prefix=prefix, command=command, params=parametrize(command, **kwargs))
         cls.send(peer_socket, message)
 
@@ -43,6 +74,17 @@ class RoutingManager:
     def respond_client_error(
         cls, client_socket: socket.socket, error_type: Command, recepient: str = "*", **kwargs: str
     ) -> None:
+        """Send an error response to a client.
+
+        :param client_socket: client socket.
+        :type client_socket: ``socket.socket``
+        :param error_type: type of error to send.
+        :type error_type: ``Command``
+        :param recepient: recipient of the error response (default: "*").
+        :type recepient: ``str``
+        :param kwargs: Additional parameters for the error response.
+        :type kwargs: ``dict[str, str]``
+        """
         message_error = Message(
             prefix=None,
             command=error_type,
@@ -53,6 +95,17 @@ class RoutingManager:
 
     @classmethod
     def forward_to_user(cls, server: IRCServer, receiver_nick: str, message: Message) -> None:
+        """Forward a message to a specific user.
+
+        :param server: IRC server instance.
+        :type server: ``IRCServer``
+        :param receiver_nick: nickname of the receiving user.
+        :type receiver_nick: ``str``
+        :param message: message to forward.
+        :type message: ``Message``
+        :raises NoSuchNick: If the user does not exist.
+        :raises ValueError: If an internal error occurs.
+        """
         receiver = server._users.get_user(receiver_nick)
 
         if not receiver:
@@ -75,6 +128,15 @@ class RoutingManager:
         """Send message to channel members.
 
         Doesn't send message to local user if local user sent the message or to closest server from which message was received.
+
+        :param server: IRC server instance.
+        :type server: ``IRCServer``
+        :param channel: channel to send the message to.
+        :type channel: ``Channel``
+        :param message: message to send.
+        :type message: ``Message``
+        :raises ValueError: If the sender or message prefix is missing.
+        :raises NoSuchNick: If a user in the channel does not exist.
         """
         logging.info(f"Forwarding message to channel: {message}")
         if not message.prefix:
