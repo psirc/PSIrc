@@ -95,7 +95,9 @@ class MessageParser:
         params_list = params.split()
         params_list.append(trail) if trail else None
 
+        print(params_list)
         params_dict = {CMD_PARAMS[command][i]: param for i, param in enumerate(params_list)}
+        print(params_dict)
         return parametrize(command, **params_dict)
 
     @classmethod

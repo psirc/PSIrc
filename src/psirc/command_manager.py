@@ -361,7 +361,7 @@ def handle_ping_command(
 
 
 def handle_join_command(
-    server: IRCServer, _: socket.socket, session_info: SessionInfo | None, message: Message
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
 
     if not message.params or not session_info:
@@ -369,25 +369,55 @@ def handle_join_command(
     channel_name = message.params["channel"]
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)
-    topic_rpl = Message(
-        prefix=None,
-        command=Command.RPL_TOPIC,
-        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing="No topic yet"),
-    )
-    print(topic_rpl)
-
     # handle better namereply
     names = server._channels.get_names(channel_name)
 
-    nam_rpl = Message(
+    topic = "No topic yet"  # TODO get channel topic instead of this
+    RoutingManager.respond_client(
+        client_socket,
+        prefix=None,
+        command=Command.RPL_TOPIC,
+        channel=channel_name,
+        trailing=topic,
+    )
+    RoutingManager.respond_client(
+        client_socket,
         prefix=None,
         command=Command.RPL_NAMREPLY,
-        params=parametrize(Command.RPL_TOPIC, channel=channel_name, trailing=names),
+        channel=channel_name,
+        trailing=names,
     )
-    print(nam_rpl)
 
-    RoutingManager.send_to_user(session_info.nickname, topic_rpl, server._users)
-    RoutingManager.send_to_user(session_info.nickname, nam_rpl, server._users)
+
+def handle_names_command(
+    server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
+) -> None:
+    print("handling names")
+    if message.command is not Command.NAMES:
+        raise ValueError("Implementation error: Wrong command type")
+
+    if not session_info:
+        raise ValueError("Cannot call names if not registered")
+
+    if not message.params or not message.params["channel"]:
+        # TODO if channel not passed return all visible channels
+        raise NotImplementedError("Not yet implemented")
+
+    channel_name = message.params["channel"]
+    try:
+        names = server._channels.get_names(channel_name)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL)
+
+    RoutingManager.respond_client(
+        client_socket,
+        prefix=None,
+        command=Command.RPL_NAMREPLY,
+        channel=channel_name,
+        trailing=names,
+    )
+
+    RoutingManager.respond_client(client_socket, prefix=None, command=Command.RPL_ENDOFNAMES, channel=channel_name)
 
 
 CMD_FUNCTIONS = {
@@ -400,4 +430,5 @@ CMD_FUNCTIONS = {
     Command.PING: handle_ping_command,
     Command.JOIN: handle_join_command,
     Command.OPER: handle_oper_command,
+    Command.NAMES: handle_names_command,
 }

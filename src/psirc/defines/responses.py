@@ -20,7 +20,9 @@ class Command(Enum):
     RPL_ENDOFWHOIS = 318
     RPL_WHOISCHANNELS = 319
     RPL_TOPIC = 332
+    # Names
     RPL_NAMREPLY = 353
+    RPL_ENDOFNAMES = 366
     RPL_YOUREOPER = 381
 
     # ------------ ERRORS -------------
@@ -58,6 +60,7 @@ class Command(Enum):
 
     QUIT = 1010
     CONNECT = 1011
+    NAMES = 1012
 
     CAP = 2000
 
