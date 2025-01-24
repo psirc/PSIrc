@@ -6,9 +6,17 @@
 PSIrc documentation
 ===================
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+This is a documentation for the PSIrc project.
+PSIrc is a simple IRC Server that supports:
+* Users
+* Operators
+* Channel operators
+* IRC operators
+* Private messaging
+* Channel messaging
+* Kicking out of channels
+
+The server follows RFC 1459 and mostly works with IRC clients that support it as well
 
 
 .. toctree::
