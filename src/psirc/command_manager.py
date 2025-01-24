@@ -381,11 +381,10 @@ def handle_join_command(
     channel_name = message.params["channel"]
     # TODO handling banned users, and key protected channels + handle channel topic
     server._channels.join(channel_name, session_info.nickname)
-    # handle better namereply
     names = server._channels.get_names(channel_name)
     symbol = server._channels.get_symbol(channel_name)
+    topic = server._channels.get_topic(channel_name)
 
-    topic = "No topic yet"  # TODO get channel topic instead of this
     RoutingManager.respond_client(
         client_socket,
         prefix=None,

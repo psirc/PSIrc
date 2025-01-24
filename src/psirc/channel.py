@@ -12,7 +12,16 @@ class Channel:
         self.chanops = {chanop_nickname}
         self.users = {chanop_nickname}
         self.banned_users: set[str] = set()
-        self.key = ""
+        self._key = ""
+        self._topic = "No topic yet"
+
+    @property
+    def key(self) -> str:
+        return self._key
+
+    @property
+    def topic(self) -> str:
+        return self._topic
 
     def join(self, nickname: str, key: str = "") -> None:
         """Add user with selected nickname to server.

@@ -72,6 +72,10 @@ class ChannelManager:
         channel = self.get_channel(channel_name)
         return channel.channel_symbol()
 
+    def get_topic(self, channel_name: str) -> str:
+        channel = self.get_channel(channel_name)
+        return channel.topic
+
     def get_channel(self, channel_name: str) -> Channel:
         """Get Channel with name
 
