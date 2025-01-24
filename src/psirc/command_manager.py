@@ -448,6 +448,10 @@ def handle_join_command(
         channel=channel_name,
         trailing=names,
     )
+    channel = server._channels.get_channel(channel_name)
+    message.prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
+
+    RoutingManager.send_to_channel(server, channel, message)
 
 
 def handle_names_command(
