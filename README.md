@@ -336,3 +336,15 @@ Konfiguracja haseł dostępu do serwera znajduje się w pliku psirc.conf
 Po połączeniu się z serwerem można korzystać z serwera.
 
 
+## Testy
+Przeprowadzone zostały testy jednostkowe dotyczące:
+- sprawdzania poprawności formatu elementów takich jak: pseudonim, nazwa hosta, nazwa kanału, nazwa użytkownika.
+- parsowania wiadomości
+- reprezenacji wiadomości jako string
+- operacji menadżera klientów
+
+W trakcie rozwoju aplikacji prowadzone były również testy poprawności działania z wykorzystaniem:
+- telnet
+- klient irrsi
+- mirc
+
