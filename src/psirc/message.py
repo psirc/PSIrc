@@ -46,10 +46,8 @@ class Params:
         self.recepient = recepient if recepient else ""  # used in numeric replies
 
     def __str__(self) -> str:
-        return (
-            self.recepient
-            + " "
-            + " ".join((":" if key == "trailing" else "") + self[key] for key in self.params.keys() if self[key])
+        return (self.recepient + " " if self.recepient else "") + " ".join(
+            (":" if key == "trailing" else "") + self[key] for key in self.params.keys() if self[key]
         )
 
     def __getitem__(self, key: str) -> str:

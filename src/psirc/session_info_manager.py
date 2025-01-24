@@ -14,3 +14,9 @@ class SessionInfoManager:
 
     def remove(self, client_socket: socket.socket) -> None:
         self._socket_info.pop(client_socket, None)
+
+    def get_socket(self, nickname: str) -> socket.socket | None:
+        for sock, info in self._socket_info.items():
+            if info.nickname == nickname:
+                return sock
+        return None

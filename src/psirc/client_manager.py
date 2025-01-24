@@ -71,6 +71,10 @@ class ClientManager:
         with self._lock:
             return self._users.get(user_nick)
 
+    def get_server(self, server_nick: str) -> Server | None:
+        with self._lock:
+            return self._servers.get(server_nick)
+
     def list_users(self) -> list[str]:
         """
         List all users

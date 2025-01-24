@@ -4,7 +4,8 @@ import logging
 from psirc.message import Message, Prefix
 from psirc.response_params import parametrize
 from psirc.client_manager import ClientManager
-from psirc.client import LocalUser
+from psirc.server import IRCServer
+from psirc.client import LocalUser, ExternalUser
 from psirc.channel import Channel
 from psirc.defines.responses import Command
 from psirc.defines.exceptions import NoSuchNick
@@ -13,7 +14,7 @@ from psirc.defines.exceptions import NoSuchNick
 class RoutingManager:
 
     @staticmethod
-    def send_response(client_socket: socket.socket, message: Message) -> None:
+    def send(client_socket: socket.socket, message: Message) -> None:
         client_socket.send(str(message).encode())
 
     @classmethod
@@ -30,14 +31,14 @@ class RoutingManager:
             logging.warning("IRC Command passed in numeric reply function")
         response = Message(prefix=prefix, command=command, params=parametrize(command, **kwargs, recepient=recepient))
         logging.info(f"Responding to client:{response}")
-        cls.send_response(client_socket, response)
+        cls.send(client_socket, response)
 
     @classmethod
     def send_command(
         cls, peer_socket: socket.socket, prefix: Prefix | None = None, *, command: Command, **kwargs: str
     ) -> None:
         message = Message(prefix=prefix, command=command, params=parametrize(command, **kwargs))
-        cls.send_response(peer_socket, message)
+        cls.send(peer_socket, message)
 
     @classmethod
     def respond_client_error(
@@ -49,36 +50,32 @@ class RoutingManager:
             params=parametrize(error_type, recepient=recepient, **kwargs),
         )
         logging.info(f"Responding to client with error: {message_error}")
-        cls.send_response(client_socket, message_error)
+        cls.send(client_socket, message_error)
 
-    @staticmethod
-    def send_to_user(receiver_nick: str, message: Message, client_manager: ClientManager) -> None:
-        # for now only sends to local
-        receiver = client_manager.get_user(receiver_nick)
+    @classmethod
+    def forward_to_user(cls, server: IRCServer, receiver_nick: str, message: Message) -> None:
+        receiver = server._users.get_user(receiver_nick)
+
         if not receiver:
             logging.warning(f"No user with nickname: {receiver_nick}")
             raise NoSuchNick("No user with given nickname")
-        if isinstance(receiver, LocalUser):
-            logging.info(f"Forwarding private message: {message}")
-            receiver.socket.send(str(message).encode())
-        else:
-            # TODO: forward to server
-            raise NotImplementedError("send to user external")
-        return
 
-    @staticmethod
-    def send_to_channel(channel: Channel, message: Message, client_manager: ClientManager) -> None:
-        # for now only sends to local
-        encoded_message = str(message).encode()
-        external_users = []
         logging.info(f"Forwarding private message: {message}")
+        if isinstance(receiver, LocalUser):
+            cls.send(receiver.socket, message)
+        elif isinstance(receiver, ExternalUser):
+            next_hop_sock = server._sessions.get_socket(receiver.location)
+            if not next_hop_sock:
+                raise ValueError("Implementation error inside the code")
+            cls.send(next_hop_sock, message)
+        else:
+            raise ValueError("Implementation error inside the code")
+
+    @classmethod
+    def send_to_channel(cls, server: IRCServer, channel: Channel, message: Message) -> None:
+        logging.info(f"Forwarding message to channel: {message}")
         for nickname in channel.users:
             if message.prefix and nickname == message.prefix.sender:
+                # dont resend message to sender
                 continue
-
-            user = client_manager.get_user(nickname)
-            if isinstance(user, LocalUser):
-                user.socket.send(encoded_message)
-            else:
-                external_users.append(user)
-        # TODO: forward to servers
+            cls.forward_to_user(server, nickname, message)

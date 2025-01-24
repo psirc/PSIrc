@@ -4,6 +4,7 @@ import logging
 from psirc.server import IRCServer, AlreadyRegistered
 from psirc.message import Message, Prefix
 from psirc.defines.responses import Command
+from psirc.client import LocalUser, ExternalUser
 from psirc.session_info import SessionInfo, SessionType
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
@@ -352,6 +353,7 @@ def handle_privmsg_command(
 
     message.prefix = Prefix(session_info.nickname, session_info.username, server.nickname)
 
+    # can be either nickname or servername
     receiver = None
     if message.params:
         receiver = message.params["receiver"]
@@ -365,13 +367,18 @@ def handle_privmsg_command(
     try:
         if IRCValidator.validate_channel(receiver):
             channel = server._channels.get_channel(receiver)
-            RoutingManager.send_to_channel(channel, message_to_send, server._users)
-        else:
-            RoutingManager.send_to_user(receiver, message_to_send, server._users)
-    except NoSuchChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
+            RoutingManager.send_to_channel(server, channel, message_to_send)
+            return
+
+        receiver_user = server._users.get_user(receiver)
+        if not receiver_user:
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
+            return
+        RoutingManager.forward_to_user(server, receiver, message_to_send)
     except NoSuchNick:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK, session_info.nickname)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
 
 
 def handle_ping_command(
