@@ -115,6 +115,15 @@ class ConnectionManager:
             self._connections.pop().close()
 
     def connect_to(self, address: str, port: int) -> socket.socket | None:
+        """Open new connection with address. Used to connect to other servers.
+
+        :param address: address of server
+        :type address: ``str``
+        :param port: port to connect to
+        :type address: ``int``
+        :return: Socket if connection was successful, none otherwise
+        :rtype: ``socket.socket | None``
+        """
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.settimeout(5.0)
