@@ -25,3 +25,9 @@ class SessionInfoManager:
                 if self._socket_info[session].type == type:
                     result[session] = self._socket_info[session]
         return result
+
+    def get_socket(self, nickname: str) -> socket.socket | None:
+        for sock, info in self._socket_info.items():
+            if info.nickname == nickname:
+                return sock
+        return None

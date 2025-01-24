@@ -5,8 +5,8 @@ from psirc.server import IRCServer
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="psirc", description="PSI IRC Server")
-    
+    parser = argparse.ArgumentParser(prog="psirc", description="PSIIRCServer")
+
     parser.add_argument("-a", "--address", dest="server_addr", default="127.0.0.1")
     parser.add_argument("-p", "--port", dest="port", default="6667")
     parser.add_argument("-n", "--name", dest="name", default="PSIrcServer")
