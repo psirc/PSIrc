@@ -293,8 +293,9 @@ Potem program można zainstalować przy użyciu pipx
 ```as
 pipx install -e .
 ```
-### Uruchomienie serwera
-Po zainstalowaniu programu, serwer można uruchomić:
+
+### Konfigurowanie haseł
+Po zainstalowaniu programu, hasła serwera można edytować edytując plik psirc.conf:
 ```
 # define password I lines here
 # I:<hostname>@<address>:<password>:
@@ -315,8 +316,8 @@ Można ustawić hasło na nazwę użytkownika zgodnie z przykładem z pliku. ("I
 Można ustawić hasło dla odpowiednich adresów ip lub zakresów adresów ip zgodnie z przykładem. ("I lines")
 Można ustawić hasło potrzebne do uzyskania statusu operatora ("O lines")
 
-### Konfigurowanie haseł
-Po zainstalowaniu programu, hasła serwera można edytować edytując plik psirc.conf:
+### Uruchomienie serwera
+Po zainstalowaniu programu, serwer można uruchomić:
 ```sh
 psirc --address {żądany adres serwera} --port {żądany port serwera} --name {nazwa własna serwera IRC}
 ```
