@@ -28,16 +28,16 @@ class Prefix:
         hostname = f"{self.user}{'@' if self.host else ''}{self.host}"
         return f":{self.sender}{'!' if hostname else ''}{hostname}"
 
-    #def __eq__(self, other: object) -> bool:
-    #    if not isinstance(other, Prefix):
-    #        return NotImplemented
-    #    return all(
-    #        (
-    #            self.sender == other.sender,
-    #            self.user == other.user,
-    #            self.host == other.host,
-    #        )
-    #    )
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Prefix):
+            return NotImplemented
+        return all(
+            (
+                self.sender == other.sender,
+                self.user == other.user,
+                self.host == other.host,
+            )
+        )
 
 
 class Params:
