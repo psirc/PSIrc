@@ -72,6 +72,14 @@ class ClientManager:
             return self._users.get(user_nick)
 
     def get_server(self, server_nick: str) -> Server | None:
+        """
+        Retrieve Server object for a server.
+
+        :param server_nick: name of the server
+        :type server_nick: ``str``
+        :return: Server object if found, otherwise None
+        :rtype: ``Server`` or ``None``
+        """
         with self._lock:
             return self._servers.get(server_nick)
 
@@ -117,6 +125,14 @@ class ClientManager:
             return disconnected_users
 
     def add_oper_privileges(self, user_nick: str) -> None:
+        """
+        Add oper privileges to user
+
+        :param user_nick: nickname of user being granted irc operator privileges
+        :type user_nick: ``str``
+        :return: None
+        :rtype: None
+        """
         with self._lock:
             if user_nick not in self._users.keys():
                 raise NoSuchNick()
@@ -126,12 +142,25 @@ class ClientManager:
                 user.is_oper = True
 
     def has_oper_privileges(self, user_nick: str) -> bool:
+        """
+        Get information if user has irc operator privileges
+
+        :param user_nick: nickname of user being granted irc operator privileges
+        :type user_nick: ``str``
+        :rtype: `bool`
+        """
         with self._lock:
             if user_nick in self._users.keys() and isinstance((user := self._users[user_nick]), LocalUser):
                 return user.is_oper
             return False
 
     def get_local_users(self) -> list[str]:
+        """
+        Get nicknames of users connected to irc server directly
+
+        :return: list of nicknames
+        :rtype: `list[str]`
+        """
         result = []
         with self._lock:
             for user in self._users:

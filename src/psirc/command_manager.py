@@ -364,6 +364,26 @@ def handle_server_command(
 def handle_privmsg_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
+    """
+    Handles recieved PRIVMSG command
+
+    Forwards message to user or channel
+    Checks if: user is known(session info), required channel name is present
+    Delegates forwarding message to routing manager
+
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :raises ValueError: In cases that should not be possible
+    :type message: ``Message``
+    :return: None
+    :rtype: None
+    """
     if message.command is not Command.PRIVMSG:
         raise ValueError("Implementation error: Wrong command type")
 
@@ -403,12 +423,30 @@ def handle_privmsg_command(
     except NoSuchNick:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK, session_info.nickname)
     except NoSuchChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=receiver
+        )
 
 
 def handle_ping_command(
     _: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
+    """
+    Handles recieved PING command
+
+    Responfing with PONG to notify that server is alive
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :type message: ``Message``
+    :return: None
+    :rtype: None
+    """
 
     if not session_info or not session_info.registered():
         return
@@ -421,15 +459,45 @@ def handle_ping_command(
 def handle_join_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
+    """
+    Handles recieved JOIN command
+
+    Checks if: user is known(session info), required channel name is present
+    Delegates performing JOIN operation to channel manager.
+    If channel did not exist it is created and user becomes channel operator
+    If JOIN operation performed correctly:
+    - sends to user a pair of: TOPIC, NAMREPLY:
+        - NAMREPLY containis channel name and nicknames of users on channel separated by spaces
+        - TOPIC contains channel name and channel topic
+    - notifies user on channel about joining of new user
+
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :type message: ``Message``
+    :return: None
+    :rtype: None
+    """
 
     if not message.params or not session_info:
         return
     channel_name = message.params["channel"]
-    # TODO handling banned users, and key protected channels + handle channel topic
-    server._channels.join(channel_name, session_info.nickname)
-    names = server._channels.get_names(channel_name)
-    symbol = server._channels.get_symbol(channel_name)
-    topic = server._channels.get_topic(channel_name)
+    if not channel_name:
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, recepient=session_info.nickname)
+    try:
+        server._channels.join(channel_name, session_info.nickname)
+        names = server._channels.get_names(channel_name)
+        symbol = server._channels.get_symbol(channel_name)
+        topic = server._channels.get_topic(channel_name)
+    except NoSuchChannel:
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
 
     RoutingManager.respond_client(
         client_socket,
@@ -457,6 +525,24 @@ def handle_join_command(
 def handle_names_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
+    """
+    Handles recieved NAMES command
+
+    Checks if: user is known(session info), required channel name is present
+    Gets names form requested channel
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :type message: ``Message``
+    :raises ValueError: In cases that should not be possible
+    :return: None
+    :rtype: None
+    """
     if message.command is not Command.NAMES:
         raise ValueError("Implementation error: Wrong command type")
 
@@ -472,7 +558,9 @@ def handle_names_command(
         names = server._channels.get_names(channel_name)
         symbol = server._channels.get_symbol(channel_name)
     except NoSuchChannel:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL)
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
+        )
 
     RoutingManager.respond_client(
         client_socket,
@@ -496,6 +584,25 @@ def handle_names_command(
 def handle_part_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
+    """
+    Handles recieved PART command
+
+    Checks if: user is known(session info), required channel name is present
+    Delegates performing PART operation to channel manager.
+    If KICK operation performed correctly, notifies channel users and user kicked from channel.
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :type message: ``Message``
+    :raises ValueError: In cases that should not be possible
+    :return: None
+    :rtype: None
+    """
     if message.command is not Command.PART:
         raise ValueError("Implementation error: Wrong command type")
 
@@ -525,6 +632,25 @@ def handle_part_command(
 def handle_kick_command(
     server: IRCServer, client_socket: socket.socket, session_info: SessionInfo | None, message: Message
 ) -> None:
+    """
+    Handles recieved KICK command
+
+    Checks if: user is known(session info), required command parameters present(channel, nickname)
+    Delegates performing KICK operation to channel manager.
+    If KICK operation performed correctly, notifies channel users and user kicked from channel.
+
+    :param server: Current server instance
+    :type server: ``IRCServer``
+    :param client_socket: Socket from which the message was received
+    :type client_socket: ``socket.socket``
+    :param session_info: Session information instance associated with the client socket
+    :type session_info: ``SessionInfo | None``
+    :param message: Parsed message received from the socket
+    :type message: ``Message``
+    :raises ValueError: In cases that should not be possible
+    :return: None
+    :rtype: None
+    """
     if message.command is not Command.KICK:
         raise ValueError("Implementation error: Wrong command type")
 
