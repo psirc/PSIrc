@@ -56,13 +56,13 @@ class Channel:
         """Kick user from channel
 
         :param nickname: nickname of user performing KICK operation
-        :type nickname: str
+        :type nickname: `str`
         :param kicked_nick: nickname of user to be kicked
         :type kicked_nick: ``str``
-        :raises: ChanopPrivIsNeeded: if user trying to perform operation does not have needed privileges
-        :raises: NotOnChannel: if user with provided nick is not on channel
+        :raises ChanopPrivIsNeeded: if user trying to perform operation does not have needed privileges
+        :raises NotOnChannel: if user with provided nick is not on channel
         :return: None
-        :rtype: None
+        :rtype: `None`
         """
         if not self.is_chanop(nickname):
             raise ChanopPrivIsNeeded(
@@ -75,10 +75,10 @@ class Channel:
         """Part from channel
 
         :param nickname: nickname of user departing from channel
-        :type nickname: str
+        :type nickname: `str`
         :raises: NotOnChannel: if user with provided nick is not on channel
         :return: None
-        :rtype: None
+        :rtype: `None`
         """
         if not self.is_in_channel(nickname):
             raise NotOnChannel(f"user with nick: {nickname} is not on channel: {self.name}")
@@ -89,13 +89,33 @@ class Channel:
         logging.info(f"{nickname} parted from channel: {self.name}")
 
     def is_in_channel(self, nickname: str) -> bool:
+        """Return information if user is on channel
+
+        :param nickname:
+        :type nickname: `str`
+        :rtype: `bool`
+        """
         return nickname in self.users
 
     def is_chanop(self, nickname: str) -> bool:
+        """Return information if user is channel operator
+
+        :param nickname:
+        :type nickname: `str`
+        :rtype: `bool`
+        """
         return nickname in self.chanops
 
     def names(self) -> str:
+        """Return string of nicknames in channel, sparated by spaces
+
+        :rtype: `str`
+        """
         return " ".join((("@" + nickname if nickname in self.chanops else "+" + nickname) for nickname in self.users))
 
     def channel_symbol(self) -> str:
+        """Get channel symbol * - if channel is private, = if channel is public
+
+        :rtype: `str`
+        """
         return "*" if self.key else "="

@@ -65,6 +65,15 @@ class ExternalUser(Client):
 
 
 class Server(Client):
+    """
+    Class representing another server
+
+    :param nick: server name
+    :type nick: ``str``
+    :param hop_count: the number of hops required to reach the server
+    :type hop_count: int
+    """
+
     def __init__(self, nick: str, hop_count: int) -> None:
         super().__init__(nick)
         self._hop_count = hop_count
