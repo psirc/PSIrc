@@ -46,7 +46,7 @@ class Command(Enum):
     ERR_ALREADYREGISTRED = 462
     ERR_PASSWDMISMATCH = 464
     ERR_NOPRIVILEGES = 481
-    ERR_CHANOPRIVISNEEDED = 482
+    ERR_CHANOPRIVSNEEDED = 482
 
     # Responses greater than 1000
     # Representing text commands
