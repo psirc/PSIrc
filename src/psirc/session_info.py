@@ -36,6 +36,11 @@ class SessionInfo:
         self.type = SessionType.UNKNOWN
 
     def registered(self) -> bool:
+        """Checks if session has marks indicating registered status.
+
+        :return: is session registered
+        :rtype: ``bool``
+        """
         return bool(self.nickname and self.type is not SessionType.UNKNOWN)
 
     def __str__(self) -> str:
