@@ -293,4 +293,22 @@ Potem program można zainstalować przy użyciu pipx
 ```as
 pipx install -e .
 ```
+### Uruchomienie serwera
+Po zainstalowaniu programu, serwer można uruchomić:
+```sh
+psirc --address {żądany adres serwera} --port {żądany port serwera} --name {nazwa własna serwera IRC}
+```
+Można również uruchomić serwer bez podawania parametrów poprzez: `psirc`, serwer zostanie domyślnie uruchomiony na pod adresem localhost na porcie 6667
+### Korzystanie z usług serwera za pośrednictwem programu klienckigo
+Można do tego wykorzystać np. program kliencki irssi
+```
+irssi
+```
+Następnie aby połączyć sie z serwerem:
+```
+/connect -nocap 127.0.0.1 -pass p@ssw0rd
+```
+Konfiguracja haseł dostępu do serwera znajduje się w pliku psirc.conf
+Po połączeniu się z serwerem można korzystać z serwera.
+
 
