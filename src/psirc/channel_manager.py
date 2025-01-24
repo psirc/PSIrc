@@ -62,19 +62,53 @@ class ChannelManager:
         self._check_for_cleanup(channel_name)
 
     def part_from_channel(self, channel_name: str, nickname: str) -> None:
+        """Delegate PART - part user from channel
+
+        :param: channel_name: name of the channel
+        :type channel_name: ``str``
+        :param: nickname: nickname of user being parted from channel
+        :type nickname: `str`
+        :raises: NoSuchChannel: if channel of the given name doesnt exist
+        :raises: NotOnChannel: if channel of the given name doesnt exist
+        :return: None
+        :rtype: `None`
+        """
         channel = self.get_channel(channel_name)
         channel.part(nickname)
         self._check_for_cleanup(channel_name)
 
     def get_names(self, channel_name: str) -> str:
+        """Get nicknames string from channel - used handling NAMES
+
+        :param: channel_name: name of the channel
+        :type channel_name: ``str``
+        :raises: NotOnChannel: if channel of the given name doesnt exist
+        :return: nicknames separated by space
+        :rtype: `str`
+        """
         channel = self.get_channel(channel_name)
         return channel.names()
 
     def get_symbol(self, channel_name: str) -> str:
+        """Get channel symbol indicating if its private or public
+
+        :param: channel_name: name of the channel
+        :type channel_name: ``str``
+        :raises: NotOnChannel: if channel of the given name doesnt exist
+        """
+
         channel = self.get_channel(channel_name)
         return channel.channel_symbol()
 
     def get_topic(self, channel_name: str) -> str:
+        """Get channel topic
+
+        :param: channel_name: name of the channel
+        :type channel_name: ``str``
+        :raises: NotOnChannel: if channel of the given name doesnt exist
+        :return: channel topic
+        :rtype: `str`
+        """
         channel = self.get_channel(channel_name)
         return channel.topic
 
