@@ -3,7 +3,6 @@ import logging
 
 from psirc.message import Message, Prefix
 from psirc.response_params import parametrize
-from psirc.client_manager import ClientManager
 from psirc.server import IRCServer
 from psirc.client import LocalUser, ExternalUser
 from psirc.channel import Channel
@@ -78,6 +77,8 @@ class RoutingManager:
         Doesn't send message to local user if local user sent the message or to closest server from which message was received.
         """
         logging.info(f"Forwarding message to channel: {message}")
+        if not message.prefix:
+            raise ValueError("Implementation error inside the code")
         sender_nick = message.prefix.sender
         if not sender_nick:
             raise ValueError("Missing sender nick in send to channel")
@@ -100,7 +101,7 @@ class RoutingManager:
             receiver = server._users.get_user(nickname)
 
             if not receiver:
-                logging.warning(f"No user with nickname: {receiver_nick}")
+                logging.warning(f"No user with nickname: {nickname}")
                 raise NoSuchNick("No user with given nickname")
 
             if isinstance(receiver, LocalUser):

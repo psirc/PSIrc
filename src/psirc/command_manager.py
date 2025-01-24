@@ -4,7 +4,6 @@ import logging
 from psirc.server import IRCServer, AlreadyRegistered
 from psirc.message import Message, Prefix
 from psirc.defines.responses import Command
-from psirc.client import LocalUser, ExternalUser
 from psirc.session_info import SessionInfo, SessionType
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
@@ -508,9 +507,7 @@ def handle_part_command(
         server._channels.part_from_channel(channel_name, session_info.nickname)
         channel = server._channels.get_channel(channel_name)
         RoutingManager.send_to_channel(server, channel, message)
-        RoutingManager.respond_client_error(
-            client_socket, Command.ERR_NOTONCHANNEL, recepient=session_info.nickname, channel=channel_name
-        )
+        RoutingManager.forward_to_user(server, session_info.nickname, message)
     except NoSuchChannel:
         RoutingManager.respond_client_error(
             client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
@@ -545,6 +542,7 @@ def handle_kick_command(
         server._channels.kick(channel_name, session_info.nickname, kicked_nick)
         channel = server._channels.get_channel(channel_name)
         RoutingManager.send_to_channel(server, channel, message)
+        RoutingManager.forward_to_user(server, kicked_nick, message)
     except NoSuchChannel:
         RoutingManager.respond_client_error(
             client_socket, Command.ERR_NOSUCHCHANNEL, recepient=session_info.nickname, channel=channel_name
