@@ -17,8 +17,7 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
     - Klient może dołączyć do istniejącego kanału na serwerze IRC
     - Klient może utworzyć nowy kanał
     - Klient może połączyć się z innym użytkownikiem w celu komunikacji między pojedynczymi użytkownikami
-    - Serwer ma możliwość ustawienia hasła dostępu do wszystkich kanałów na nim obecnych
-    - Klient ma możliwość dodania hasła do kanału
+    - Serwer ma możliwość ustawienia hasła dostępu do serwera
     - Klient, który utworzył kanał, ma możliwość usuwania innych użytkowników
 2. Niefunkcjonalne
     - Serwer musi być zabezpieczony przez nieutoryzowanym użyciem
@@ -27,6 +26,9 @@ Celem projektu jest implementacja uproszczonego serwera IRC obsługującego uwie
     - Serwer musi płynnie kończyć działanie - obsługa `SIGTERM`, `SIGINT`
 
 ## 3. Przypadki użycia
+**Korzystanie z serwera IRC przy użyciu dowolnego programu klienckiego IRC zgodnego z RFC 1459**
+*Aktor: Użytkownik*
+1. Użytkownik łączy się z działającym serwerem irc przy pomocu klienta IRC
 
 **Komunikacja z grupą znajomych**
 
@@ -270,3 +272,6 @@ Funkcje:
     * 24.01:
         - Obsługa wyrzucania klienta z kanału
         - Upiększenie interfejsu klienta
+
+## 12. Instukcja użytkownika
+
