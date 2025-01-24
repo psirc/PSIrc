@@ -8,7 +8,7 @@ from psirc.session_info import SessionInfo, SessionType
 from psirc.response_params import parametrize
 from psirc.routing_manager import RoutingManager
 from psirc.irc_validator import IRCValidator
-from psirc.defines.exceptions import NoSuchChannel
+from psirc.defines.exceptions import NoSuchChannel, NoSuchNick
 
 import psirc.command_helpers as helpers
 
@@ -41,19 +41,15 @@ def handle_connect_command(
         ...
 
     # Send PASS message
-    RoutingManager.send_command(
-        server_socket,
-        command=Command.PASS,
-        password=session_info.password
-    )
+    RoutingManager.send_command(server_socket, command=Command.PASS, password=session_info.password)
 
     # Send SERVER message
     RoutingManager.send_command(
         server_socket,
         command=Command.SERVER,
         servername=server.nickname,
-        hopcount='1',
-        trailing="Placeholder server message"
+        hopcount="1",
+        trailing="Placeholder server message",
     )
 
 
@@ -64,7 +60,7 @@ def handle_oper_command(
     ...
     """  # TODO write doc
     if not session_info:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED, '*')
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NOTREGISTERED, "*")
         return
     if message.command is not Command.OPER:
         raise ValueError("Implementation error: Wrong command type")
@@ -146,11 +142,13 @@ def handle_pass_command(
             server.register_local_connection(client_socket, session_info, message.params["password"])
         else:
             # missing params
-            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, '*')
+            RoutingManager.respond_client_error(client_socket, Command.ERR_NEEDMOREPARAMS, "*")
             raise ValueError("Missing params from message command PASS")
         # OK, no response to client
     except AlreadyRegistered:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname if session_info else '*')
+        RoutingManager.respond_client_error(
+            client_socket, Command.ERR_ALREADYREGISTRED, session_info.nickname if session_info else "*"
+        )
     # OK, no response to client
 
 
@@ -190,11 +188,11 @@ def handle_nick_command(
     if message.params and "nickname" in message.params:
         nickname = message.params["nickname"]
     else:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, '*')
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, "*")
         return
 
     if not server.is_unique(nickname):
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION, '*')
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NICKCOLLISION, "*")
 
     session_info.nickname = nickname
 
@@ -255,7 +253,9 @@ def handle_user_command(
         server.register_local_user(client_socket, session_info)
         logging.info(f"Registered: {session_info}")
 
-        RoutingManager.respond_client(client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname, recepient=session_info.nickname)
+        RoutingManager.respond_client(
+            client_socket, command=Command.RPL_WELCOME, nickname=session_info.nickname, recepient=session_info.nickname
+        )
         # TODO: notify other servers of new user
     elif session_info.type == SessionType.EXTERNAL_USER:
         # TODO: register new external user arrival
@@ -331,7 +331,7 @@ def handle_privmsg_command(
         receiver = message.params["receiver"]
 
     if not receiver:
-        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN)
+        RoutingManager.respond_client_error(client_socket, Command.ERR_NONICKNAMEGIVEN, session_info.nickname)
         return
 
     message_to_send = message
@@ -344,8 +344,7 @@ def handle_privmsg_command(
             RoutingManager.send_to_user(receiver, message_to_send, server._users)
     except NoSuchChannel:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHCHANNEL, session_info.nickname)
-        return
-    except KeyError:
+    except NoSuchNick:
         RoutingManager.respond_client_error(client_socket, Command.ERR_NOSUCHNICK, session_info.nickname)
 
 

@@ -1,15 +1,8 @@
 import socket
 import threading
+from psirc.defines.exceptions import NoSuchNick, NickAlreadyInUse
 from psirc.client import Client, LocalUser, ExternalUser, Server
 from collections.abc import Sequence
-
-
-class NickAlreadyInUse(Exception):
-    pass
-
-
-class NoSuchNick(Exception):
-    pass
 
 
 class ClientManager:
