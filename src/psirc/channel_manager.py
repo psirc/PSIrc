@@ -28,13 +28,18 @@ class ChannelManager:
         try:
             channel = self.get_channel(channel_name)
             channel.join(nickname, key)
+            logging.info(f"{nickname} joined {channel_name}")
         except NoSuchChannel:
             logging.info(f"NoSuchChanel: {channel_name}, creating...")
             self._create_channel(channel_name, nickname)
 
-    def quit(self, _: str) -> None:
-        # TODO: remove user from all channels
-        pass
+    def quit(self, nickname: str) -> None:
+        check_if_empty = []
+        for channel_name, channel in self.channels.items():
+            if channel.is_in_channel(nickname):
+                channel.part(nickname)
+                check_if_empty.append(channel_name)
+        self._check_for_cleanup(channel_name)
 
     def kick(self, channel_name: str, nickname: str, kicked_nick: str) -> None:
         """Delegate KICK - kick from channel
@@ -52,6 +57,7 @@ class ChannelManager:
         """
         channel = self.get_channel(channel_name)
         channel.kick(nickname, kicked_nick)
+        self._check_for_cleanup(channel_name)
 
     def get_names(self, channel_name: str) -> str:
         channel = self.get_channel(channel_name)
@@ -69,6 +75,11 @@ class ChannelManager:
         if channel_name not in self.channels.keys():
             raise NoSuchChannel(f"Channel with name: {channel_name} does not exist")
         return self.channels[channel_name]
+
+    def _check_for_cleanup(self, channel_name: str) -> None:
+        if not self.get_channel(channel_name).names():
+            logging.info(f"Channel: {channel_name} empty, deletng")
+            del self.channels[channel_name]
 
     def _create_channel(self, channel_name: str, nickname: str) -> None:
         self.channels[channel_name] = Channel(channel_name, nickname)

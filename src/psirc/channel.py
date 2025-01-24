@@ -55,11 +55,11 @@ class Channel:
         :return: None
         :rtype: None
         """
-        if nickname not in self.chanops:
+        if not self.is_chanop(nickname):
             raise ChanopPrivIsNeeded(
                 f"Channel operator's privileges needed to perform KICK operation. {nickname} has no such privileges."
             )
-
+        logging.info(f"Kicking {nickname} from channel {self.name}")
         self.part(kicked_nick)
 
     def part(self, nickname: str) -> None:
@@ -71,12 +71,19 @@ class Channel:
         :return: None
         :rtype: None
         """
-        if nickname not in self.users:
+        if not self.is_in_channel(nickname):
             raise NotOnChannel(f"user with nick: {nickname} is not on channel: {self.name}")
-
         self.users.remove(nickname)
-        if nickname in self.chanops:
+        if self.is_chanop(nickname):
             self.chanops.remove(nickname)
+
+        logging.info(f"{nickname} parted from channel: {self.name}")
+
+    def is_in_channel(self, nickname: str) -> bool:
+        return nickname in self.users
+
+    def is_chanop(self, nickname: str) -> bool:
+        return nickname in self.chanops
 
     def names(self) -> str:
         return " ".join((("@" + nickname if nickname in self.chanops else "+" + nickname) for nickname in self.users))
